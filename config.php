@@ -1,6 +1,6 @@
 <?php
 // Połączenie z bazą danych
-$serverName = "localhost\\SQLEXPRESS";
+$serverName = "localhost";
 $database = "leclerc";
 $username = "sa";
 $password = "123456789";
