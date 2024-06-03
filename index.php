@@ -17,22 +17,7 @@
         </form>
 
         <?php
-        // Połączenie z bazą danych
-        $serverName = "localhost\\SQLEXPRESS";
-        $database = "leclerc";
-        $username = "sa";
-        $password = "123456789";
-
-        $connectionInfo = array("Database" => $database, "UID" => $username, "PWD" => $password);
-        $conn = sqlsrv_connect($serverName, $connectionInfo);
-
-        if ($conn) {
-            //echo "Połączenie z bazą danych powiodło się!";
-        } else {
-            echo "Błąd połączenia: ";
-            die(print_r(sqlsrv_errors(), true));
-        }
-
+        require_once("config.php");
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (!empty($_POST["ean"])) {
                 $ean = htmlspecialchars($_POST["ean"]);
