@@ -87,6 +87,10 @@ tr:nth-child(even) {
     color: #007bff;
 }
 
+.median {
+    color: #2b00ed;
+}
+
 .mode {
     color: #dc3545;
 }
