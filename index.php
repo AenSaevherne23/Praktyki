@@ -85,8 +85,16 @@
 
                     // Obliczenie dominanty
                     $dominanta = array_count_values(array_map('strval', $ceny));
-                    arsort($dominanta);
-                    $pierwszaDominanta = key($dominanta);
+                    $maxOccurrences = max($dominanta);
+                    $pierwszaDominanta = array_search($maxOccurrences, $dominanta);
+                    
+                    // Sprawdź, czy istnieje więcej niż jedna dominanta
+                    foreach ($dominanta as $key => $value) {
+                        if ($value === $maxOccurrences && $key > $pierwszaDominanta) {
+                            $pierwszaDominanta = $key;
+                        }
+                    }
+                    
                     echo "<div class='result'><span>Dominanta:</span> <span class='mode'>" . number_format($pierwszaDominanta, 2, '.', '') . "</span></div>";
                 } else {
                     echo "Brak wyników.";

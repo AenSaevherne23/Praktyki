@@ -7,6 +7,8 @@
 </head>
 <body>
 <?php
+require_once("config.php");
+
 
 
 ?>
