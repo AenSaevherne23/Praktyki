@@ -82,7 +82,7 @@
 
                     // Filtrowanie cen odstających (powyżej mediany + 2 * odchylenie standardowe)
                     $cenyFiltr = array_filter($wszystkieCeny, function($cena) use ($mediana, $odchylenieStandardowe) {
-                        return $cena <= $mediana + 2 * $odchylenieStandardowe;
+                        return $cena <= $mediana + 2.3 * $odchylenieStandardowe;
                     });
 
                     // Obliczenie średniej ceny
