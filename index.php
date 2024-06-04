@@ -75,12 +75,31 @@
                         $mediana = $ceny[($liczbaCen - 1) / 2];
                     }
                     echo "<div class='result'><span>Mediana:</span> <span class='median'>" . number_format($mediana, 2, '.', '') . "</span></div>";
-
-                    // Obliczenie dominaty
-                    $dominanta = array_count_values($ceny);
-                    arsort($dominanta);
-                    $pierwszaDominanta = key($dominanta);
-                    echo "<div class='result'><span>Dominanta:</span> <span class='mode'>" . number_format($pierwszaDominanta, 2, '.', '') . "</span></div>";
+                    
+                    //DOMINANTA
+                    if (count($ceny) > 1) {
+                        $dominanta = array_count_values($ceny);
+                        
+                        // Znajdź maksymalną liczbę wystąpień dominującej wartości
+                        $maxOccurrences = max($dominanta);
+                        
+                        $dominantKeys = array_keys($dominanta);
+                        $pierwszaDominanta = $dominantKeys[0]; // Pierwsza dominanta z tablicy
+                        
+                        // Sprawdź, czy istnieje więcej niż jedna dominanta
+                        if ($maxOccurrences > 1) {
+                            // Znajdź dominującą wartość z największą liczbą wystąpień
+                            foreach ($dominanta as $key => $value) {
+                                if ($value === $maxOccurrences && $key > $pierwszaDominanta) {
+                                    $pierwszaDominanta = $key;
+                                }
+                            }
+                        }
+                        
+                        echo "<div class='result'><span>Dominanta:</span> <span class='mode'>" . number_format($pierwszaDominanta, 2, '.', '') . "</span></div>";
+                    } else {
+                        echo "<div class='result'><span>Dominanta:</span> <span class='mode'>Nie można obliczyć</span></div>";
+                    }
                 } else {
                     echo "Brak wyników.";
                 }
