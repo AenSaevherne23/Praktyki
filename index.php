@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,9 +44,7 @@
                     die(print_r(sqlsrv_errors(), true));
                 }
 
-                $sumaCen = 0;
-                $liczbaProduktow = 0;
-                $ceny = array();
+                $wszystkieCeny = array();
 
                 if (sqlsrv_has_rows($wynik)) {
                     echo "<table border='1'>";
@@ -58,36 +57,58 @@
                         $tk_cena = number_format($wiersz["tk_cena"], 2, '.', '');
 
                         $zaokraglonaCena = zaokraglij_do_drugiego_miejsca($wiersz["tk_cena"]);
-                        $sumaCen += $zaokraglonaCena;
-                        $liczbaProduktow++;
-
-                        $ceny[] = $zaokraglonaCena; // Dodanie zaokrąglonej ceny do tablicy
+                        $wszystkieCeny[] = $zaokraglonaCena; // Dodanie zaokrąglonej ceny do pełnej listy cen
 
                         echo "<tr><td>$tk_id</td><td>$tk_data</td><td>$tk_siec</td><td>$tk_plu</td><td>" . number_format($zaokraglonaCena, 2, '.', '') . "</td></tr>";
                     }
                     echo "</table>";
 
-                    // Obliczenie średniej ceny
-                    $sredniaCena = $liczbaProduktow ? $sumaCen / $liczbaProduktow : 0;
-                    echo "<div class='result'><span>Średnia cena:</span> <span class='average'>" . number_format($sredniaCena, 2, '.', '') . "</span></div>";
-
                     // Obliczenie mediany
-                    sort($ceny);
-                    $liczbaCen = count($ceny);
+                    sort($wszystkieCeny);
+                    $liczbaCen = count($wszystkieCeny);
                     $mediana = 0;
 
                     if ($liczbaCen % 2 == 0) {
-                        $mediana = ($ceny[$liczbaCen / 2 - 1] + $ceny[$liczbaCen / 2]) / 2;
+                        $mediana = ($wszystkieCeny[$liczbaCen / 2 - 1] + $wszystkieCeny[$liczbaCen / 2]) / 2;
                     } else {
-                        $mediana = $ceny[($liczbaCen - 1) / 2];
+                        $mediana = $wszystkieCeny[($liczbaCen - 1) / 2];
                     }
-                    echo "<div class='result'><span>Mediana:</span> <span class='median'>" . number_format($mediana, 2, '.', '') . "</span></div>";
 
-                    // Obliczenie dominanty
-                    $dominanta = array_count_values(array_map('strval', $ceny));
+                    // Obliczenie odchylenia standardowego
+                    $sumaOdchylen = 0;
+                    foreach ($wszystkieCeny as $cena) {
+                        $sumaOdchylen += pow($cena - $mediana, 2);
+                    }
+                    $odchylenieStandardowe = sqrt($sumaOdchylen / $liczbaCen);
+
+                    // Filtrowanie cen odstających (powyżej mediany + 2 * odchylenie standardowe)
+                    $cenyFiltr = array_filter($wszystkieCeny, function($cena) use ($mediana, $odchylenieStandardowe) {
+                        return $cena <= $mediana + 2.3 * $odchylenieStandardowe;
+                    });
+
+                    // Obliczenie średniej ceny
+                    $sumaCen = array_sum($cenyFiltr);
+                    $liczbaProduktow = count($cenyFiltr);
+                    $sredniaCena = $liczbaProduktow ? $sumaCen / $liczbaProduktow : 0;
+                    echo "<div class='result'><span>Średnia cena:</span> <span class='average'>" . number_format($sredniaCena, 2, '.', '') . "</span></div>";
+
+                    // Obliczenie mediany z przefiltrowanych cen
+                    sort($cenyFiltr);
+                    $liczbaCenFiltr = count($cenyFiltr);
+                    $medianaFiltr = 0;
+
+                    if ($liczbaCenFiltr % 2 == 0) {
+                        $medianaFiltr = ($cenyFiltr[$liczbaCenFiltr / 2 - 1] + $cenyFiltr[$liczbaCenFiltr / 2]) / 2;
+                    } else {
+                        $medianaFiltr = $cenyFiltr[($liczbaCenFiltr - 1) / 2];
+                    }
+                    echo "<div class='result'><span>Mediana:</span> <span class='median'>" . number_format($medianaFiltr, 2, '.', '') . "</span></div>";
+
+                    // Obliczenie dominanty z przefiltrowanych cen
+                    $dominanta = array_count_values(array_map('strval', $cenyFiltr));
                     $maxOccurrences = max($dominanta);
                     $pierwszaDominanta = array_search($maxOccurrences, $dominanta);
-                    
+
                     // Sprawdź, czy istnieje więcej niż jedna dominanta
                     foreach ($dominanta as $key => $value) {
                         if ($value === $maxOccurrences && $key > $pierwszaDominanta) {
