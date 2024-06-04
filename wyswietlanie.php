@@ -64,7 +64,7 @@ if (sqlsrv_has_rows($wynik_eany)) {
         $odchylenieStandardoweProduktow = sqrt($sumaOdchylenProduktow / $liczbaCenProduktow);
         
         $cenyFiltrProduktow = array_filter($cenyProduktow, function($cena) use ($medianaProduktow, $odchylenieStandardoweProduktow) {
-            return $cena <= $medianaProduktow + 2.2 * $odchylenieStandardoweProduktow;
+            return $cena <= $medianaProduktow + 2.3 * $odchylenieStandardoweProduktow;
         });
         
         $sumaCenProduktow = array_sum($cenyFiltrProduktow);

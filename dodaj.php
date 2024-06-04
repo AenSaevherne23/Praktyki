@@ -1,63 +1,88 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dodaj produkt</title>
-</head>
-<body>
-<form action="dodaj.php" method="POST">
-    <label for="id">Podaj nr ID:</label>
-    <input type="number" id="id" name="id" />
-    <br />
-    <label for="czas">Podaj datę:</label>
-    <input type="date" id="czas" name="czas" />
-    <br />
-    <label for="plu">Podaj nr EAN:</label>
-    <input type="text" id="plu" name="plu" />
-    <br />
-    <label for="ilosc">Podaj ilość wystąpień:</label>
-    <input type="text" id="ilosc" name="ilosc" />
-    <br />
-    <label for="srednia">Podaj średnią cenę:</label>
-    <input type="text" id="srednia" name="srednia" />
-    <br />
-    <label for="mediana">Podaj medianę:</label>
-    <input type="text" id="mediana" name="mediana" />
-    <br />
-    <label for="dominanta">Podaj dominantę:</label>
-    <input type="text" id="dominanta" name="dominanta" />
-    <button type="submit">Dodaj</button>
-</form>
-
 <?php
 require_once("config.php");
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $id = $_POST['id'];
-    $czas = $_POST['czas'];
-    $plu = $_POST['plu'];
-    $ilosc = $_POST['ilosc'];
-    $srednia = $_POST['srednia'];
-    $mediana = $_POST['mediana'];
-    $dominanta = $_POST['dominanta'];
 
-    // Zapytanie SQL do wstawienia danych
-    $query = "INSERT INTO dbo.tw_konkurencja_obliczenia (
-                tk_id, tk_data, tk_plu, tk_ilosc_wystapien, tk_srednia_cena, tk_mediana, tk_dominanta
-              ) VALUES (
-                '$id', '$czas', '$plu', '$ilosc', '$srednia', '$mediana', '$dominanta'
-              )";
+// Zapytanie SQL dla unikalnych numerów EAN z tabeli
+$zapytanie_eany = "SELECT DISTINCT [tk_plu] FROM [leclerc].[dbo].[tw_konkurencja]";
+$wynik_eany = sqlsrv_query($conn, $zapytanie_eany);
 
-    $insertResult = sqlsrv_query($conn, $query);
-
-    if ($insertResult === false) {
-        echo "Błąd podczas dodawania danych: " . print_r(sqlsrv_errors(), true);
-    } else {
-        echo "Dane zostały pomyślnie dodane do bazy danych.";
-    }
+if ($wynik_eany === false) {
+    echo "Błąd wykonania zapytania: ";
+    die(print_r(sqlsrv_errors(), true));
 }
 
+if (sqlsrv_has_rows($wynik_eany)) {
+    while ($wiersz_ean = sqlsrv_fetch_array($wynik_eany, SQLSRV_FETCH_ASSOC)) {
+        $ean = $wiersz_ean["tk_plu"];
 
+        // Zapytanie SQL dla konkretnego numeru EAN
+        $zapytanie = "SELECT [tk_id], [tk_data], [tk_siec], [tk_plu], [tk_cena] 
+                      FROM [leclerc].[dbo].[tw_konkurencja] 
+                      WHERE [tk_plu] = ?";
+        
+        // Przygotowanie i wykonanie zapytania dla danego numeru EAN
+        $params = array($ean);
+        $wynik = sqlsrv_query($conn, $zapytanie, $params);
+
+        if ($wynik === false) {
+            echo "Błąd wykonania zapytania dla EAN $ean: ";
+            die(print_r(sqlsrv_errors(), true));
+        }
+
+        $cenyProduktow = array();
+
+        while ($wiersz = sqlsrv_fetch_array($wynik, SQLSRV_FETCH_ASSOC)) {
+            $tk_cena = round($wiersz["tk_cena"], 1) - 0.01;
+            $cenyProduktow[] = $tk_cena;
+        }
+
+        $liczbaCenProduktow = count($cenyProduktow);
+        $medianaProduktow = $liczbaCenProduktow % 2 == 0 ? ($cenyProduktow[$liczbaCenProduktow / 2 - 1] + $cenyProduktow[$liczbaCenProduktow / 2]) / 2 : $cenyProduktow[($liczbaCenProduktow - 1) / 2];
+
+        $sumaOdchylenProduktow = 0;
+        foreach ($cenyProduktow as $cena) {
+            $sumaOdchylenProduktow += pow($cena - $medianaProduktow, 2);
+        }
+        $odchylenieStandardoweProduktow = sqrt($sumaOdchylenProduktow / $liczbaCenProduktow);
+        
+        $cenyFiltrProduktow = array_filter($cenyProduktow, function($cena) use ($medianaProduktow, $odchylenieStandardoweProduktow) {
+            return $cena <= $medianaProduktow + 2.3 * $odchylenieStandardoweProduktow;
+        });
+        
+        $sumaCenProduktow = array_sum($cenyFiltrProduktow);
+        $liczbaProduktowFiltr = count($cenyFiltrProduktow);
+        $sredniaCenaProduktow = $liczbaProduktowFiltr ? $sumaCenProduktow / $liczbaProduktowFiltr : 0;
+        
+        sort($cenyFiltrProduktow);
+        $medianaFiltrProduktow = $liczbaProduktowFiltr % 2 == 0 ? ($cenyFiltrProduktow[$liczbaProduktowFiltr / 2 - 1] + $cenyFiltrProduktow[$liczbaProduktowFiltr / 2]) / 2 : $cenyFiltrProduktow[($liczbaProduktowFiltr - 1) / 2];
+        
+        $dominantaProduktow = array_count_values(array_map('strval', $cenyFiltrProduktow));
+        $maxOccurrencesProduktow = max($dominantaProduktow);
+        $pierwszaDominantaProduktow = array_search($maxOccurrencesProduktow, $dominantaProduktow);
+
+        foreach ($dominantaProduktow as $key => $value) {
+            if ($value === $maxOccurrencesProduktow && $key > $pierwszaDominantaProduktow) {
+                $pierwszaDominantaProduktow = $key;
+            }
+        }
+
+        // Wstawianie wyników do bazy danych
+        $query = "INSERT INTO dbo.tw_konkurencja_obliczenia (
+                    tk_plu, tk_ilosc_wystapien, tk_srednia_cena, tk_mediana, tk_dominanta
+                  ) VALUES (
+                    ?, ?, ?, ?, ?
+                  )";
+        $params = array($ean, $liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltrProduktow, $pierwszaDominantaProduktow);
+        $insertResult = sqlsrv_query($conn, $query, $params);
+
+        if ($insertResult === false) {
+            echo "Błąd podczas dodawania danych dla EAN $ean: " . print_r(sqlsrv_errors(), true);
+        }
+    }
+    echo "Dane zostały pomyślnie dodane do bazy danych.";
+} else {
+    echo "Brak unikalnych numerów EAN w bazie danych.";
+}
+
+sqlsrv_free_stmt($wynik_eany);
+sqlsrv_close($conn);
 ?>
-</body>
-</html>
