@@ -18,6 +18,12 @@
 
         <?php
         require_once("config.php");
+
+        // Funkcja zaokrąglająca cenę do drugiego miejsca po przecinku
+        function zaokraglij_do_drugiego_miejsca($cena) {
+            return round($cena, 1) - 0.01;
+        }
+
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (!empty($_POST["ean"])) {
                 $ean = htmlspecialchars($_POST["ean"]);
@@ -51,12 +57,13 @@
                         $tk_plu = $wiersz["tk_plu"];
                         $tk_cena = number_format($wiersz["tk_cena"], 2, '.', '');
 
-                        $sumaCen += $wiersz["tk_cena"];
+                        $zaokraglonaCena = zaokraglij_do_drugiego_miejsca($wiersz["tk_cena"]);
+                        $sumaCen += $zaokraglonaCena;
                         $liczbaProduktow++;
 
-                        $ceny[] = $wiersz["tk_cena"]; // Dodanie ceny do tablicy
+                        $ceny[] = $zaokraglonaCena; // Dodanie zaokrąglonej ceny do tablicy
 
-                        echo "<tr><td>$tk_id</td><td>$tk_data</td><td>$tk_siec</td><td>$tk_plu</td><td>$tk_cena</td></tr>";
+                        echo "<tr><td>$tk_id</td><td>$tk_data</td><td>$tk_siec</td><td>$tk_plu</td><td>" . number_format($zaokraglonaCena, 2, '.', '') . "</td></tr>";
                     }
                     echo "</table>";
 
@@ -76,8 +83,8 @@
                     }
                     echo "<div class='result'><span>Mediana:</span> <span class='median'>" . number_format($mediana, 2, '.', '') . "</span></div>";
 
-                    // Obliczenie dominaty
-                    $dominanta = array_count_values($ceny);
+                    // Obliczenie dominanty
+                    $dominanta = array_count_values(array_map('strval', $ceny));
                     arsort($dominanta);
                     $pierwszaDominanta = key($dominanta);
                     echo "<div class='result'><span>Dominanta:</span> <span class='mode'>" . number_format($pierwszaDominanta, 2, '.', '') . "</span></div>";
