@@ -15,8 +15,8 @@
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         require_once("config.php");
 
-        // Zapytanie SQL dla unikalnych numerów EAN z tabeli, ograniczone do 100 rekordów
-        $zapytanie_eany = "SELECT DISTINCT TOP(500) [tk_plu] FROM [leclerc].[dbo].[tw_konkurencja]";
+        // Zapytanie SQL dla unikalnych numerów EAN z tabeli, ograniczone do 500 rekordów
+        $zapytanie_eany = "SELECT DISTINCT TOP(500) [tk_plu] FROM [leclerc].[dbo].[tw_konkurencja] GROUP BY [tk_plu] HAVING COUNT(*) > 1";
         $wynik_eany = sqlsrv_query($conn, $zapytanie_eany);
 
         if ($wynik_eany === false) {
@@ -28,7 +28,7 @@
             while ($wiersz_ean = sqlsrv_fetch_array($wynik_eany, SQLSRV_FETCH_ASSOC)) {
                 $ean = $wiersz_ean["tk_plu"];
 
-                // Zapytanie SQL dla konkretnego numeru EAN, ograniczone do 100 rekordów
+                // Zapytanie SQL dla konkretnego numeru EAN
                 $zapytanie = "SELECT [tk_id], [tk_data], [tk_siec], [tk_plu], [tk_cena] 
                               FROM [leclerc].[dbo].[tw_konkurencja] 
                               WHERE [tk_plu] = ?";
@@ -78,6 +78,11 @@
                         $pierwszaDominantaProduktow = $key;
                     }
                 }
+
+                // Zaokrąglanie wartości do dwóch miejsc po przecinku
+                $sredniaCenaProduktow = round($sredniaCenaProduktow, 2);
+                $medianaFiltrProduktow = round($medianaFiltrProduktow, 2);
+                $pierwszaDominantaProduktow = round($pierwszaDominantaProduktow, 2);
 
                 // Wstawianie wyników do bazy danych
                 $query = "INSERT INTO dbo.tw_konkurencja_obliczenia (
