@@ -15,8 +15,8 @@
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         require_once("config.php");
 
-        // Zapytanie SQL dla unikalnych numerów EAN z tabeli
-        $zapytanie_eany = "SELECT DISTINCT [tk_plu] FROM [leclerc].[dbo].[tw_konkurencja]";
+        // Zapytanie SQL dla unikalnych numerów EAN z tabeli, ograniczone do 100 rekordów
+        $zapytanie_eany = "SELECT DISTINCT TOP(500) [tk_plu] FROM [leclerc].[dbo].[tw_konkurencja]";
         $wynik_eany = sqlsrv_query($conn, $zapytanie_eany);
 
         if ($wynik_eany === false) {
@@ -28,8 +28,8 @@
             while ($wiersz_ean = sqlsrv_fetch_array($wynik_eany, SQLSRV_FETCH_ASSOC)) {
                 $ean = $wiersz_ean["tk_plu"];
 
-                // Zapytanie SQL dla konkretnego numeru EAN
-                $zapytanie = "SELECT TOP(100) [tk_id], [tk_data], [tk_siec], [tk_plu], [tk_cena] 
+                // Zapytanie SQL dla konkretnego numeru EAN, ograniczone do 100 rekordów
+                $zapytanie = "SELECT [tk_id], [tk_data], [tk_siec], [tk_plu], [tk_cena] 
                               FROM [leclerc].[dbo].[tw_konkurencja] 
                               WHERE [tk_plu] = ?";
                 
