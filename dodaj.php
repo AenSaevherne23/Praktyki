@@ -84,17 +84,45 @@
                 $medianaFiltrProduktow = round($medianaFiltrProduktow, 2);
                 $pierwszaDominantaProduktow = round($pierwszaDominantaProduktow, 2);
 
-                // Wstawianie wyników do bazy danych
-                $query = "INSERT INTO dbo.tw_konkurencja_obliczenia (
-                            tk_plu, tk_ilosc_wystapien, tk_srednia_cena, tk_mediana, tk_dominanta
-                          ) VALUES (
-                            ?, ?, ?, ?, ?
-                          )";
-                $params = array($ean, $liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltrProduktow, $pierwszaDominantaProduktow);
-                $insertResult = sqlsrv_query($conn, $query, $params);
+                // Sprawdzanie, czy istnieją już obliczenia dla danego EAN
+                $checkQuery = "SELECT tk_srednia_cena, tk_mediana, tk_dominanta FROM dbo.tw_konkurencja_obliczenia WHERE tk_plu = ?";
+                $checkParams = array($ean);
+                $checkResult = sqlsrv_query($conn, $checkQuery, $checkParams);
 
-                if ($insertResult === false) {
-                    echo "Błąd podczas dodawania danych dla EAN $ean: " . print_r(sqlsrv_errors(), true);
+                if ($checkResult === false) {
+                    echo "Błąd podczas sprawdzania istniejących danych dla EAN $ean: " . print_r(sqlsrv_errors(), true);
+                    continue;
+                }
+
+                if (sqlsrv_has_rows($checkResult)) {
+                    $existingRow = sqlsrv_fetch_array($checkResult, SQLSRV_FETCH_ASSOC);
+
+                    // Sprawdzanie, czy wartości są różne
+                    if ($existingRow['tk_srednia_cena'] != $sredniaCenaProduktow || $existingRow['tk_mediana'] != $medianaFiltrProduktow || $existingRow['tk_dominanta'] != $pierwszaDominantaProduktow) {
+                        // Aktualizacja rekordu
+                        $updateQuery = "UPDATE dbo.tw_konkurencja_obliczenia 
+                                        SET tk_ilosc_wystapien = ?, tk_srednia_cena = ?, tk_mediana = ?, tk_dominanta = ?, tk_zaktualizowano = GETDATE() 
+                                        WHERE tk_plu = ?";
+                        $updateParams = array($liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltrProduktow, $pierwszaDominantaProduktow, $ean);
+                        $updateResult = sqlsrv_query($conn, $updateQuery, $updateParams);
+
+                        if ($updateResult === false) {
+                            echo "Błąd podczas aktualizacji danych dla EAN $ean: " . print_r(sqlsrv_errors(), true);
+                        }
+                    }
+                } else {
+                    // Wstawianie nowych wyników do bazy danych
+                    $insertQuery = "INSERT INTO dbo.tw_konkurencja_obliczenia (
+                                    tk_plu, tk_ilosc_wystapien, tk_srednia_cena, tk_mediana, tk_dominanta, tk_zaktualizowano
+                                  ) VALUES (
+                                    ?, ?, ?, ?, ?, GETDATE()
+                                  )";
+                    $insertParams = array($ean, $liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltrProduktow, $pierwszaDominantaProduktow);
+                    $insertResult = sqlsrv_query($conn, $insertQuery, $insertParams);
+
+                    if ($insertResult === false) {
+                        echo "Błąd podczas dodawania danych dla EAN $ean: " . print_r(sqlsrv_errors(), true);
+                    }
                 }
             }
             echo "Dane zostały pomyślnie dodane do bazy danych.";
