@@ -46,56 +46,62 @@ if (sqlsrv_has_rows($wynik_eany)) {
             $cenyProduktow[] = $tk_cena;
         }
 
-        $liczbaCenProduktow = count($cenyProduktow);
-        $medianaProduktow = $liczbaCenProduktow % 2 == 0 ? ($cenyProduktow[$liczbaCenProduktow / 2 - 1] + $cenyProduktow[$liczbaCenProduktow / 2]) / 2 : $cenyProduktow[($liczbaCenProduktow - 1) / 2];
+        // Sortowanie cen
+        sort($cenyProduktow);
 
-        while ($wiersz = sqlsrv_fetch_array($wynik, SQLSRV_FETCH_ASSOC)) {
-            $tk_cena = round($wiersz["tk_cena"], 1) - 0.01;
-            $cenyProduktow[] = $tk_cena;
-        }
-        
+        // Obliczenie mediany dla wszystkich cen
         $liczbaCenProduktow = count($cenyProduktow);
-        $medianaProduktow = $liczbaCenProduktow % 2 == 0 ? ($cenyProduktow[$liczbaCenProduktow / 2 - 1] + $cenyProduktow[$liczbaCenProduktow / 2]) / 2 : $cenyProduktow[($liczbaCenProduktow - 1) / 2];
-        
+        if ($liczbaCenProduktow % 2 == 0) {
+            $medianaProduktow = ($cenyProduktow[$liczbaCenProduktow / 2 - 1] + $cenyProduktow[$liczbaCenProduktow / 2]) / 2;
+        } else {
+            $medianaProduktow = $cenyProduktow[($liczbaCenProduktow - 1) / 2];
+        }
+
+        // Obliczenie odchylenia standardowego
         $sumaOdchylenProduktow = 0;
         foreach ($cenyProduktow as $cena) {
             $sumaOdchylenProduktow += pow($cena - $medianaProduktow, 2);
         }
         $odchylenieStandardoweProduktow = sqrt($sumaOdchylenProduktow / $liczbaCenProduktow);
         
+        // Filtrowanie cen odstających
         $cenyFiltrProduktow = array_filter($cenyProduktow, function($cena) use ($medianaProduktow, $odchylenieStandardoweProduktow) {
             return $cena <= $medianaProduktow + 2.3 * $odchylenieStandardoweProduktow;
         });
-        
+
+        // Ponowne sortowanie przefiltrowanych cen
+        sort($cenyFiltrProduktow);
+
+        // Obliczenie średniej ceny z przefiltrowanych cen
         $sumaCenProduktow = array_sum($cenyFiltrProduktow);
         $liczbaProduktowFiltr = count($cenyFiltrProduktow);
         $sredniaCenaProduktow = $liczbaProduktowFiltr ? $sumaCenProduktow / $liczbaProduktowFiltr : 0;
-        
-        sort($cenyFiltrProduktow);
-        $medianaFiltrProduktow = $liczbaProduktowFiltr % 2 == 0 ? ($cenyFiltrProduktow[$liczbaProduktowFiltr / 2 - 1] + $cenyFiltrProduktow[$liczbaProduktowFiltr / 2]) / 2 : $cenyFiltrProduktow[($liczbaProduktowFiltr - 1) / 2];
-        
-      // Obliczanie dominanty z przefiltrowanych cen
-$dominantaProduktow = array_count_values(array_map('strval', $cenyFiltrProduktow));
-$maxOccurrencesProduktow = max($dominantaProduktow);
-$pierwszaDominantaProduktow = array_search($maxOccurrencesProduktow, $dominantaProduktow);
 
-// Sprawdzenie, czy istnieje więcej niż jedna dominanta
-foreach ($dominantaProduktow as $key => $value) {
-    if ($value === $maxOccurrencesProduktow && $key > $pierwszaDominantaProduktow) {
-        $pierwszaDominantaProduktow = $key;
-    }
-}
+        // Obliczenie mediany z przefiltrowanych cen
+        if ($liczbaProduktowFiltr % 2 == 0) {
+            $medianaFiltrProduktow = ($cenyFiltrProduktow[$liczbaProduktowFiltr / 2 - 1] + $cenyFiltrProduktow[$liczbaProduktowFiltr / 2]) / 2;
+        } else {
+            $medianaFiltrProduktow = $cenyFiltrProduktow[($liczbaProduktowFiltr - 1) / 2];
+        }
+
+        // Obliczenie dominanty z przefiltrowanych cen
+        $dominantaProduktow = array_count_values(array_map('strval', $cenyFiltrProduktow));
+        $maxOccurrencesProduktow = max($dominantaProduktow);
+        $pierwszaDominantaProduktow = array_search($maxOccurrencesProduktow, $dominantaProduktow);
+
+        // Sprawdzenie, czy istnieje więcej niż jedna dominanta
+        foreach ($dominantaProduktow as $key => $value) {
+            if ($value === $maxOccurrencesProduktow && $key > $pierwszaDominantaProduktow) {
+                $pierwszaDominantaProduktow = $key;
+            }
+        }
 
         // Wyświetlenie wyników dla danego numeru EAN
         echo "<tr>";
         echo "<td>$ean</td>";
         echo "<td>" . number_format($sredniaCenaProduktow, 2, '.', '') . "</td>";
         echo "<td>" . number_format($medianaFiltrProduktow, 2, '.', '') . "</td>";
-        if (isset($pierwszaDominantaProduktow)) {
         echo "<td>" . number_format($pierwszaDominantaProduktow, 2, '.', '') . "</td>";
-        } else {
-        echo "<td>Nie znaleziono dominanty</td>";
-        }
         echo "<td>$liczbaProduktowFiltr</td>";
         echo "</tr>";
 
