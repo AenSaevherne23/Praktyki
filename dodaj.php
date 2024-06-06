@@ -49,26 +49,33 @@
                     $cenyProduktow[] = $tk_cena;
                 }
 
+                // Obliczanie mediany
+                sort($cenyProduktow);
                 $liczbaCenProduktow = count($cenyProduktow);
                 $medianaProduktow = $liczbaCenProduktow % 2 == 0 ? ($cenyProduktow[$liczbaCenProduktow / 2 - 1] + $cenyProduktow[$liczbaCenProduktow / 2]) / 2 : $cenyProduktow[($liczbaCenProduktow - 1) / 2];
 
+                // Obliczanie odchylenia standardowego
                 $sumaOdchylenProduktow = 0;
                 foreach ($cenyProduktow as $cena) {
                     $sumaOdchylenProduktow += pow($cena - $medianaProduktow, 2);
                 }
                 $odchylenieStandardoweProduktow = sqrt($sumaOdchylenProduktow / $liczbaCenProduktow);
                 
+                // Filtrowanie cen odstających
                 $cenyFiltrProduktow = array_filter($cenyProduktow, function($cena) use ($medianaProduktow, $odchylenieStandardoweProduktow) {
                     return $cena <= $medianaProduktow + 2.3 * $odchylenieStandardoweProduktow;
                 });
                 
+                // Obliczanie średniej ceny
                 $sumaCenProduktow = array_sum($cenyFiltrProduktow);
                 $liczbaProduktowFiltr = count($cenyFiltrProduktow);
                 $sredniaCenaProduktow = $liczbaProduktowFiltr ? $sumaCenProduktow / $liczbaProduktowFiltr : 0;
                 
+                // Obliczanie mediany z przefiltrowanych cen
                 sort($cenyFiltrProduktow);
                 $medianaFiltrProduktow = $liczbaProduktowFiltr % 2 == 0 ? ($cenyFiltrProduktow[$liczbaProduktowFiltr / 2 - 1] + $cenyFiltrProduktow[$liczbaProduktowFiltr / 2]) / 2 : $cenyFiltrProduktow[($liczbaProduktowFiltr - 1) / 2];
                 
+                // Obliczanie dominanty z przefiltrowanych cen
                 $dominantaProduktow = array_count_values(array_map('strval', $cenyFiltrProduktow));
                 $maxOccurrencesProduktow = max($dominantaProduktow);
                 $pierwszaDominantaProduktow = array_search($maxOccurrencesProduktow, $dominantaProduktow);
