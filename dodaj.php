@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Uruchom skrypt</title>
 </head>
+
 <body>
     <h1>Uruchom skrypt PHP</h1>
     <form action="" method="post">
@@ -16,12 +18,16 @@
         require_once("config.php");
 
         // Funkcja zaokrąglająca cenę do drugiego miejsca po przecinku
-        function zaokraglij_do_drugiego_miejsca($cena) {
+        function zaokraglij_do_drugiego_miejsca($cena)
+        {
             return round($cena, 1) - 0.01;
         }
 
         // Zapytanie SQL dla unikalnych numerów EAN z tabeli, ograniczone do 500 rekordów
-        $zapytanie_eany = "SELECT DISTINCT TOP(500) [tk_plu] FROM [leclerc].[dbo].[tw_konkurencja] GROUP BY [tk_plu] HAVING COUNT(*) > 1";
+        $zapytanie_eany = "SELECT DISTINCT [tk_plu] 
+                           FROM [leclerc].[dbo].[tw_konkurencja] 
+                           GROUP BY [tk_plu] 
+                           HAVING COUNT(*) > 1";
         $wynik_eany = sqlsrv_query($conn, $zapytanie_eany);
 
         if ($wynik_eany === false) {
@@ -29,31 +35,40 @@
             die(print_r(sqlsrv_errors(), true));
         }
 
+        // Zbieranie EAN-ów do tablicy
+        $eany = array();
         if (sqlsrv_has_rows($wynik_eany)) {
             while ($wiersz_ean = sqlsrv_fetch_array($wynik_eany, SQLSRV_FETCH_ASSOC)) {
-                $ean = $wiersz_ean["tk_plu"];
+                $eany[] = $wiersz_ean["tk_plu"];
+            }
+        }
 
-                // Zapytanie SQL dla konkretnego numeru EAN
-                $zapytanie = "SELECT [tk_id], [tk_data], [tk_siec], [tk_plu], [tk_cena] 
-                              FROM [leclerc].[dbo].[tw_konkurencja] 
-                              WHERE [tk_plu] = ?";
-                
-                // Przygotowanie i wykonanie zapytania dla danego numeru EAN
-                $params = array($ean);
-                $wynik = sqlsrv_query($conn, $zapytanie, $params);
+        // Sprawdzenie, czy tablica nie jest pusta
+        if (count($eany) > 0) {
+            // Przygotowanie listy EAN-ów jako stringa do użycia w zapytaniu SQL
+            $eany_string = implode("', '", $eany);
 
-                if ($wynik === false) {
-                    echo "Błąd wykonania zapytania dla EAN $ean: ";
-                    die(print_r(sqlsrv_errors(), true));
-                }
+            // Zapytanie SQL dla wszystkich wybranych numerów EAN
+            $zapytanie = "SELECT [tk_id], [tk_data], [tk_siec], [tk_plu], [tk_cena] 
+                          FROM [leclerc].[dbo].[tw_konkurencja] 
+                          WHERE [tk_plu] IN ('$eany_string')";
+            $wynik = sqlsrv_query($conn, $zapytanie);
 
-                $cenyProduktow = array();
+            if ($wynik === false) {
+                echo "Błąd wykonania zapytania: ";
+                die(print_r(sqlsrv_errors(), true));
+            }
 
+            // Przetwarzanie wyników
+            $produkty = [];
+            if (sqlsrv_has_rows($wynik)) {
                 while ($wiersz = sqlsrv_fetch_array($wynik, SQLSRV_FETCH_ASSOC)) {
-                    $tk_cena = zaokraglij_do_drugiego_miejsca($wiersz["tk_cena"]);
-                    $cenyProduktow[] = $tk_cena;
+                    $ean = $wiersz["tk_plu"];
+                    $produkty[$ean][] = zaokraglij_do_drugiego_miejsca($wiersz["tk_cena"]);
                 }
+            }
 
+            foreach ($produkty as $ean => $cenyProduktow) {
                 if (empty($cenyProduktow)) {
                     continue;
                 }
@@ -80,7 +95,7 @@
                     $odchylenieStandardowe = sqrt($sumaOdchylen / $liczbaCen);
 
                     // Filtrowanie cen odstających
-                    $cenyFiltr = array_filter($cenyProduktow, function($cena) use ($mediana, $odchylenieStandardowe) {
+                    $cenyFiltr = array_filter($cenyProduktow, function ($cena) use ($mediana, $odchylenieStandardowe) {
                         return $cena >= $mediana - 2.3 * $odchylenieStandardowe && $cena <= $mediana + 2.3 * $odchylenieStandardowe;
                     });
 
@@ -122,52 +137,53 @@
                 $medianaFiltr = round($medianaFiltr, 2);
                 $pierwszaDominanta = round($pierwszaDominanta, 2);
 
-                                // Sprawdzanie, czy istnieją już obliczenia dla danego EAN
-                                $checkQuery = "SELECT tk_srednia_cena, tk_mediana, tk_dominanta FROM dbo.tw_konkurencja_obliczenia WHERE tk_plu = ?";
-                                $checkParams = array($ean);
-                                $checkResult = sqlsrv_query($conn, $checkQuery, $checkParams);
-                
-                                if ($checkResult === false) {
-                                    echo "Błąd podczas sprawdzania istniejących danych dla EAN $ean: " . print_r(sqlsrv_errors(), true);
-                                    continue;
-                                }
-                
-                                if (sqlsrv_has_rows($checkResult)) {
-                                    $existingRow = sqlsrv_fetch_array($checkResult, SQLSRV_FETCH_ASSOC);
-                
-                                    // Sprawdzanie, czy wartości są różne
-                                    if ($existingRow['tk_srednia_cena'] != $sredniaCenaProduktow || $existingRow['tk_mediana'] != $medianaFiltr || $existingRow['tk_dominanta'] != $pierwszaDominanta) {
-                                        // Aktualizacja rekordu
-                                        $updateQuery = "UPDATE dbo.tw_konkurencja_obliczenia 
-                                                        SET tk_ilosc_wystapien = ?, tk_srednia_cena = ?, tk_mediana = ?, tk_dominanta = ?, tk_zaktualizowano = GETDATE() 
-                                                        WHERE tk_plu = ?";
-                                        $updateParams = array($liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltr, $pierwszaDominanta, $ean);
-                                        $updateResult = sqlsrv_query($conn, $updateQuery, $updateParams);
-                
-                                        if ($updateResult === false) {
-                                            echo "Błąd podczas aktualizacji danych dla EAN $ean: " . print_r(sqlsrv_errors(), true);
-                                        }
-                                    }
-                                } else {
-                                    // Wstawianie nowych wyników do bazy danych
-                                    $insertQuery = "INSERT INTO dbo.tw_konkurencja_obliczenia (
-                                                    tk_plu, tk_ilosc_wystapien, tk_srednia_cena, tk_mediana, tk_dominanta, tk_zaktualizowano
-                                                  ) VALUES (
-                                                    ?, ?, ?, ?, ?, GETDATE()
-                                                  )";
-                                    $insertParams = array($ean, $liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltr, $pierwszaDominanta);
-                                    $insertResult = sqlsrv_query($conn, $insertQuery, $insertParams);
-                
-                                    if ($insertResult === false) {
-                                        echo "Błąd podczas dodawania danych dla EAN $ean: " . print_r(sqlsrv_errors(), true);
-                                    }
-                                }
-                            }
-                        } else {
-                            echo "Brak rekordów do przetworzenia.";
+                // Sprawdzanie, czy istnieją już obliczenia dla danego EAN
+                $checkQuery = "SELECT tk_srednia_cena, tk_mediana, tk_dominanta 
+                               FROM dbo.tw_konkurencja_obliczenia 
+                               WHERE tk_plu = ?";
+                $checkParams = array($ean);
+                $checkResult = sqlsrv_query($conn, $checkQuery, $checkParams);
+
+                if ($checkResult === false) {
+                    echo "Błąd podczas sprawdzania istniejących danych dla EAN $ean: " . print_r(sqlsrv_errors(), true);
+                    continue;
+                }
+
+                if (sqlsrv_has_rows($checkResult)) {
+                    $existingRow = sqlsrv_fetch_array($checkResult, SQLSRV_FETCH_ASSOC);
+
+                    // Sprawdzanie, czy wartości są różne
+                    if ($existingRow['tk_srednia_cena'] != $sredniaCenaProduktow || $existingRow['tk_mediana'] != $medianaFiltr || $existingRow['tk_dominanta'] != $pierwszaDominanta) {
+                        // Aktualizacja rekordu
+                        $updateQuery = "UPDATE dbo.tw_konkurencja_obliczenia 
+                                        SET tk_ilosc_wystapien = ?, tk_srednia_cena = ?, tk_mediana = ?, tk_dominanta = ?, tk_zaktualizowano = GETDATE() 
+                                        WHERE tk_plu = ?";
+                        $updateParams = array($liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltr, $pierwszaDominanta, $ean);
+                        $updateResult = sqlsrv_query($conn, $updateQuery, $updateParams);
+
+                        if ($updateResult === false) {
+                            echo "Błąd podczas aktualizacji danych dla EAN $ean: " . print_r(sqlsrv_errors(), true);
                         }
                     }
-                    ?>
+                } else {
+                    // Wstawianie nowych wyników do bazy danych
+                    $insertQuery = "INSERT INTO dbo.tw_konkurencja_obliczenia (
+                                        tk_plu, tk_ilosc_wystapien, tk_srednia_cena, tk_mediana, tk_dominanta, tk_zaktualizowano
+                                        ) VALUES (
+                                        ?, ?, ?, ?, ?, GETDATE()
+                                        )";
+                    $insertParams = array($ean, $liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltr, $pierwszaDominanta);
+                    $insertResult = sqlsrv_query($conn, $insertQuery, $insertParams);
+
+                    if ($insertResult === false) {
+                        echo "Błąd podczas dodawania danych dla EAN $ean: " . print_r(sqlsrv_errors(), true);
+                    }
+                }
+            }
+        } else {
+            echo "Brak rekordów do przetworzenia.";
+        }
+    }
+    ?>
 </body>
 </html>
-                
