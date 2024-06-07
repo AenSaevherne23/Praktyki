@@ -68,6 +68,25 @@
                 }
             }
 
+            // Pobranie istniejących obliczeń dla wszystkich EAN-ów
+            $zapytanie_obliczenia = "SELECT tk_plu, tk_srednia_cena, tk_mediana, tk_dominanta 
+                                     FROM dbo.tw_konkurencja_obliczenia 
+                                     WHERE tk_plu IN ('$eany_string')";
+            $wynik_obliczenia = sqlsrv_query($conn, $zapytanie_obliczenia);
+
+            if ($wynik_obliczenia === false) {
+                echo "Błąd wykonania zapytania: ";
+                die(print_r(sqlsrv_errors(), true));
+            }
+
+            // Zbieranie istniejących obliczeń do tablicy
+            $obliczenia = [];
+            if (sqlsrv_has_rows($wynik_obliczenia)) {
+                while ($wiersz_obliczenia = sqlsrv_fetch_array($wynik_obliczenia, SQLSRV_FETCH_ASSOC)) {
+                    $obliczenia[$wiersz_obliczenia["tk_plu"]] = $wiersz_obliczenia;
+                }
+            }
+
             foreach ($produkty as $ean => $cenyProduktow) {
                 if (empty($cenyProduktow)) {
                     continue;
@@ -137,20 +156,9 @@
                 $medianaFiltr = round($medianaFiltr, 2);
                 $pierwszaDominanta = round($pierwszaDominanta, 2);
 
-                // Sprawdzanie, czy istnieją już obliczenia dla danego EAN
-                $checkQuery = "SELECT tk_srednia_cena, tk_mediana, tk_dominanta 
-                               FROM dbo.tw_konkurencja_obliczenia 
-                               WHERE tk_plu = ?";
-                $checkParams = array($ean);
-                $checkResult = sqlsrv_query($conn, $checkQuery, $checkParams);
-
-                if ($checkResult === false) {
-                    echo "Błąd podczas sprawdzania istniejących danych dla EAN $ean: " . print_r(sqlsrv_errors(), true);
-                    continue;
-                }
-
-                if (sqlsrv_has_rows($checkResult)) {
-                    $existingRow = sqlsrv_fetch_array($checkResult, SQLSRV_FETCH_ASSOC);
+                // Sprawdzenie, czy istnieją już obliczenia dla danego EAN
+                if (isset($obliczenia[$ean])) {
+                    $existingRow = $obliczenia[$ean];
 
                     // Sprawdzanie, czy wartości są różne
                     if ($existingRow['tk_srednia_cena'] != $sredniaCenaProduktow || $existingRow['tk_mediana'] != $medianaFiltr || $existingRow['tk_dominanta'] != $pierwszaDominanta) {
