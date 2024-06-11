@@ -23,7 +23,7 @@
             return round($cena, 1) - 0.01;
         }
 
-        // Zapytanie SQL dla unikalnych numerów EAN z tabeli, ograniczone do 500 rekordów
+        // Zapytanie SQL dla unikalnych numerów EAN z tabeli
         $zapytanie_eany = "SELECT DISTINCT [tk_plu] 
                            FROM [leclerc].[dbo].[tw_konkurencja] 
                            GROUP BY [tk_plu] 
