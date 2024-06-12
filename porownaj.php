@@ -48,8 +48,16 @@ WITH PagedResults AS (
             WHERE 
                 gt_poziom = 2
         ) AS gt ON gt.gt_nr_3_cyfry = LEFT(t.tw_GT, 3)
+    WHERE 
+        ppmi.tk_ppmi IS NOT NULL
+        OR ppmo.tk_ppmo IS NOT NULL
 )
-SELECT * 
+SELECT *,
+       CASE 
+           WHEN tw_cena_sprz > tk_ppmi THEN 'Cena za wysoka'
+           WHEN tw_cena_sprz < tk_ppmo THEN 'Cena za niska'
+           ELSE 'Cena OK'
+       END AS cena_status
 FROM PagedResults
 WHERE RowNum BETWEEN (@PageNumber - 1) * @RowsPerPage + 1 AND @PageNumber * @RowsPerPage;
 ";
@@ -77,6 +85,7 @@ echo "<tr>
         <th>Cena PPMI</th>
         <th>Cena PPMO</th>
         <th>Średnia Cena Konkurencja</th>
+        <th>Status Ceny</th>
       </tr>";
 
 while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
@@ -94,6 +103,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     echo "<td>" . htmlspecialchars($row['tk_ppmi']) . "</td>";
     echo "<td>" . htmlspecialchars($row['tk_ppmo']) . "</td>";
     echo "<td>" . htmlspecialchars($row['srednia_cena_konkurencja']) . "</td>";
+    echo "<td>" . htmlspecialchars($row['cena_status']) . "</td>";
     echo "</tr>";
 }
 
