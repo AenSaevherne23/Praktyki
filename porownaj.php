@@ -70,7 +70,26 @@ if ($stmt === false) {
 }
 
 // Wyświetlenie wyników
-echo "<table border='1'>";
+echo "<style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+      </style>";
+
+echo "<table>";
 echo "<tr>
         <th>ID</th>
         <th>GT</th>
@@ -96,13 +115,15 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     echo "<td>" . htmlspecialchars($row['plu_kod']) . "</td>";
     echo "<td>" . htmlspecialchars($row['tw_nazwa']) . "</td>";
     echo "<td>" . htmlspecialchars($row['tw_VAT']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['tw_cena_sprz']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['tw_c_zak']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['tw_war_zak']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['tw_pamp']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['tk_ppmi']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['tk_ppmo']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['srednia_cena_konkurencja']) . "</td>";
+    echo "<td>" . number_format((float)$row['tw_cena_sprz'], 2, '.', '') . "</td>";
+    echo "<td>" . number_format((float)$row['tw_c_zak'], 2, '.', '') . "</td>";
+    echo "<td>" . number_format((float)$row['tw_war_zak'], 2, '.', '') . "</td>";
+    echo "<td>" . number_format((float)$row['tw_pamp'], 2, '.', '') . "</td>";
+
+    echo "<td>" . ($row['tk_ppmi'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_ppmi'], 2, '.', '')) . "</td>";
+    echo "<td>" . ($row['tk_ppmo'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_ppmo'], 2, '.', '')) . "</td>";
+    echo "<td>" . ($row['srednia_cena_konkurencja'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['srednia_cena_konkurencja'], 2, '.', '')) . "</td>";
+
     echo "<td>" . htmlspecialchars($row['cena_status']) . "</td>";
     echo "</tr>";
 }
@@ -110,7 +131,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
 echo "</table>";
 
 // Wyświetlenie linków paginacji
-echo "<div>";
+echo "<div style='text-align: center;'>";
 if ($pageNumber > 1) {
     echo "<a href=\"?page=" . ($pageNumber - 1) . "\">Poprzednia</a> ";
 }
