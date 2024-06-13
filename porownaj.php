@@ -13,7 +13,6 @@ DECLARE @RowsPerPage AS INT = $rowsPerPage;
 
 WITH PagedResults AS (
     SELECT 
-        t.tw_id,
         t.tw_GT,
         LEFT(t.tw_GT, 3) AS gt_nr_3_cyfry,
         COALESCE(gt.gt_marza, 0) AS gt_marza,
@@ -22,7 +21,6 @@ WITH PagedResults AS (
         t.tw_VAT,
         t.tw_cena_sprz,
         t.tw_c_zak,
-        t.tw_war_zak,
         t.tw_pamp,
         ppmi.tk_ppmi,
         ppmo.tk_ppmo,
@@ -77,21 +75,25 @@ echo "<style>
             margin-bottom: 20px;
         }
         th, td {
-            border: 1px solid #dddddd;
+            border: 1px solid #333333;
             text-align: left;
             padding: 8px;
         }
         th {
-            background-color: #f2f2f2;
+            background-color: #666666;
+            color: white;
+            text-align: center; /* Wyśrodkowanie nazw kolumn */
         }
         tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: #cccccc;
+        }
+        tr:nth-child(odd) {
+            background-color: #eeeeee;
         }
       </style>";
 
 echo "<table>";
 echo "<tr>
-        <th>ID</th>
         <th>GT</th>
         <th>GT Marża</th>
         <th>PLU</th>
@@ -99,7 +101,6 @@ echo "<tr>
         <th>VAT</th>
         <th>Cena Sprzedaży</th>
         <th>Cena Zakupu</th>
-        <th>Wartość Zakupu</th>
         <th>Pamp</th>
         <th>Cena PPMI</th>
         <th>Cena PPMO</th>
@@ -109,7 +110,6 @@ echo "<tr>
 
 while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     echo "<tr>";
-    echo "<td>" . htmlspecialchars($row['tw_id']) . "</td>";
     echo "<td>" . htmlspecialchars($row['tw_GT']) . "</td>";
     echo "<td>" . htmlspecialchars($row['gt_marza']) . "</td>";
     echo "<td>" . htmlspecialchars($row['plu_kod']) . "</td>";
@@ -117,7 +117,6 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     echo "<td>" . htmlspecialchars($row['tw_VAT']) . "</td>";
     echo "<td>" . number_format((float)$row['tw_cena_sprz'], 2, '.', '') . "</td>";
     echo "<td>" . number_format((float)$row['tw_c_zak'], 2, '.', '') . "</td>";
-    echo "<td>" . number_format((float)$row['tw_war_zak'], 2, '.', '') . "</td>";
     echo "<td>" . number_format((float)$row['tw_pamp'], 2, '.', '') . "</td>";
 
     echo "<td>" . ($row['tk_ppmi'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_ppmi'], 2, '.', '')) . "</td>";
