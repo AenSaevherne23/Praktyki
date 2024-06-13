@@ -1,35 +1,68 @@
-<?php
-// Dane wejściowe
-$cenaZakupu = 100.0; // Cena zakupu
-$vat = 0.23; // Stawka VAT (np. 23% w Polsce)
-$marza = 0.2; // Marża (np. 20%)
-$sredniaCenaKonkurencji = 130.0; // Średnia cena konkurencji
-$ppmi = 140.0; // Maksymalna cena sprzedaży
-$ppmo = 120.0; // Minimalna cena sprzedaży
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista produktów</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
 
-// Cena zakupu netto
-$cenaZakupuNetto = $cenaZakupu / (1 + $vat);
+<h2>Lista produktów</h2>
 
-// Cena sprzedaży netto (uwzględniająca marżę)
-$cenaSprzedazyNetto = $cenaZakupuNetto * (1 + $marza);
+<table>
+    <thead>
+        <tr>
+            <th>GT</th>
+            <th>GT Marża</th>
+            <th>PLU</th>
+            <th>Nazwa</th>
+            <th>VAT</th>
+            <th>Cena Zakupu</th>
+            <th>Cena PPMI</th>
+            <th>Cena PPMO</th>
+            <th>Średnia Cena Konkurencja</th>
+            <th>Cena Sprzedaży</th>
+            <th>Obliczona Cena</th>
+            <th>Status Ceny</th>
+        </tr>
+    </thead>
+    <tbody>
 
-// Cena sprzedaży brutto (uwzględniająca VAT)
-$cenaSprzedazyBrutto = $cenaSprzedazyNetto * (1 + $vat);
+    <?php
+    // Wczytanie danych z pliku CSV
+    $file = fopen('dane_z_bazy.csv', 'r');
 
-// Korekta ceny sprzedaży według średniej ceny konkurencji
-if ($sredniaCenaKonkurencji < $cenaSprzedazyBrutto) {
-    $cenaSprzedazyBrutto = $sredniaCenaKonkurencji - 0.01;
-}
+    // Odczytanie nagłówka
+    $header = fgetcsv($file);
 
-// Sprawdzenie warunków cenowych
-if ($cenaSprzedazyBrutto > $ppmi) {
-    $cenaSprzedazyBrutto = $ppmi;
-}
+    // Pętla do odczytu i wyświetlenia danych
+    while (($line = fgetcsv($file)) !== false) {
+        echo "<tr>";
+        foreach ($line as $key => $cell) {
+            // Sprawdzenie, czy istnieje odpowiadająca komórka w nagłówku
+            $header_value = isset($header[$key]) ? $header[$key] : '';
+            echo "<td>{$cell}</td>";
+        }
+        echo "</tr>";
+    }
+    fclose($file);
+    ?>
 
-if ($cenaSprzedazyBrutto < $ppmo) {
-    $cenaSprzedazyBrutto = $ppmo;
-}
+    </tbody>
+</table>
 
-// Wygenerowanie wyniku
-echo "Ostateczna cena sprzedaży: " . number_format($cenaSprzedazyBrutto, 2, '.', '') . " PLN";
-?>
+</body>
+</html>
