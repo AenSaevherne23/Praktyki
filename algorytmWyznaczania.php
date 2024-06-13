@@ -30,12 +30,12 @@
             <th>PLU</th>
             <th>Nazwa</th>
             <th>VAT</th>
+            <th>Cena Sprzedaży</th>
             <th>Cena Zakupu</th>
+            <th>Pamp</th>
             <th>Cena PPMI</th>
             <th>Cena PPMO</th>
             <th>Średnia Cena Konkurencja</th>
-            <th>Cena Sprzedaży</th>
-            <th>Obliczona Cena</th>
             <th>Status Ceny</th>
         </tr>
     </thead>
