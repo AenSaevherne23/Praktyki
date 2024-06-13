@@ -129,6 +129,14 @@
                     
                     echo "<div class='result'><span>Dominanta:</span> <span class='mode'>" . number_format($pierwszaDominanta, 2, '.', '') . "</span></div>";
                     echo "<div class='result'><span>Liczba cen wziętych do obliczeń:</span> <span class='count'>" . $liczbaCenFiltr . "</span></div>";
+
+                    // Obliczenie ceny minimalnej i maksymalnej
+                    if ($liczbaCenFiltr > 0) {
+                        $minCena = min($wszystkieCeny);
+                        $maxCena = max($wszystkieCeny);
+                        echo "<div class='result'><span>Minimalna cena:</span> <span class='min'>" . number_format($minCena, 2, '.', '') . "</span></div>";
+                        echo "<div class='result'><span>Maksymalna cena:</span> <span class='max'>" . number_format($maxCena, 2, '.', '') . "</span></div>";
+                    }
                 } else {
                     echo "Brak wyników.";
                 }

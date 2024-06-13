@@ -17,7 +17,7 @@
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         require_once("config.php");
 
-        // Funkcja zaokrąglająca cenę do drugiego miejsca po przecinku
+        // Funkcja zaokraglająca cenę do drugiego miejsca po przecinku
         function zaokraglij_do_drugiego_miejsca($cena)
         {
             return round($cena, 1) - 0.01;
@@ -69,7 +69,7 @@
             }
 
             // Pobranie istniejących obliczeń dla wszystkich EAN-ów
-            $zapytanie_obliczenia = "SELECT tk_plu, tk_srednia_cena, tk_mediana, tk_dominanta 
+            $zapytanie_obliczenia = "SELECT tk_plu, tk_srednia_cena, tk_mediana, tk_dominanta, tk_cena_max, tk_cena_min 
                                      FROM dbo.tw_konkurencja_obliczenia 
                                      WHERE tk_plu IN ('$eany_string')";
             $wynik_obliczenia = sqlsrv_query($conn, $zapytanie_obliczenia);
@@ -151,22 +151,28 @@
                     }
                 }
 
+                // Obliczenie minimalnej i maksymalnej ceny
+                $cenaMin = min($cenyProduktow);
+                $cenaMax = max($cenyProduktow);
+
                 // Zaokrąglanie wartości do dwóch miejsc po przecinku
                 $sredniaCenaProduktow = round($sredniaCenaProduktow, 2);
                 $medianaFiltr = round($medianaFiltr, 2);
                 $pierwszaDominanta = round($pierwszaDominanta, 2);
+                $cenaMin = round($cenaMin, 2);
+                $cenaMax = round($cenaMax, 2);
 
                 // Sprawdzenie, czy istnieją już obliczenia dla danego EAN
                 if (isset($obliczenia[$ean])) {
                     $existingRow = $obliczenia[$ean];
 
                     // Sprawdzanie, czy wartości są różne
-                    if ($existingRow['tk_srednia_cena'] != $sredniaCenaProduktow || $existingRow['tk_mediana'] != $medianaFiltr || $existingRow['tk_dominanta'] != $pierwszaDominanta) {
+                    if ($existingRow['tk_srednia_cena'] != $sredniaCenaProduktow || $existingRow['tk_mediana'] != $medianaFiltr || $existingRow['tk_dominanta'] != $pierwszaDominanta || $existingRow['tk_cena_min'] != $cenaMin || $existingRow['tk_cena_max'] != $cenaMax) {
                         // Aktualizacja rekordu
                         $updateQuery = "UPDATE dbo.tw_konkurencja_obliczenia 
-                                        SET tk_ilosc_wystapien = ?, tk_srednia_cena = ?, tk_mediana = ?, tk_dominanta = ?, tk_zaktualizowano = GETDATE() 
+                                        SET tk_ilosc_wystapien = ?, tk_srednia_cena = ?, tk_mediana = ?, tk_dominanta = ?, tk_cena_max = ?, tk_cena_min = ?, tk_zaktualizowano = GETDATE() 
                                         WHERE tk_plu = ?";
-                        $updateParams = array($liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltr, $pierwszaDominanta, $ean);
+                        $updateParams = array($liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltr, $pierwszaDominanta, $cenaMax, $cenaMin, $ean);
                         $updateResult = sqlsrv_query($conn, $updateQuery, $updateParams);
 
                         if ($updateResult === false) {
@@ -176,11 +182,11 @@
                 } else {
                     // Wstawianie nowych wyników do bazy danych
                     $insertQuery = "INSERT INTO dbo.tw_konkurencja_obliczenia (
-                                        tk_plu, tk_ilosc_wystapien, tk_srednia_cena, tk_mediana, tk_dominanta, tk_zaktualizowano
+                                        tk_plu, tk_ilosc_wystapien, tk_srednia_cena, tk_mediana, tk_dominanta, tk_cena_max, tk_cena_min, tk_zaktualizowano
                                         ) VALUES (
-                                        ?, ?, ?, ?, ?, GETDATE()
+                                        ?, ?, ?, ?, ?, ?, ?, GETDATE()
                                         )";
-                    $insertParams = array($ean, $liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltr, $pierwszaDominanta);
+                    $insertParams = array($ean, $liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltr, $pierwszaDominanta, $cenaMax, $cenaMin);
                     $insertResult = sqlsrv_query($conn, $insertQuery, $insertParams);
 
                     if ($insertResult === false) {
