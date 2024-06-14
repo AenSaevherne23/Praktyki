@@ -4,7 +4,6 @@ require_once("config.php");
 $sql = "
 SELECT 
     p.plu_kod,
-    t.tw_nazwa,
     t.tw_VAT,
     t.tw_cena_sprz,
     t.tw_c_zak,
@@ -15,6 +14,7 @@ SELECT
     ko.tk_mediana,
     ko.tk_cena_max,
     ko.tk_cena_min,
+    ko.tk_dominanta,
     ko.tk_ilosc_wystapien,
     sg.gt_marza
 FROM 
@@ -35,7 +35,8 @@ CROSS APPLY
     ) AS sg
 WHERE 
     ppmi.tk_ppmi IS NOT NULL
-    OR ppmo.tk_ppmo IS NOT NULL;
+    OR ppmo.tk_ppmo IS NOT NULL 
+    ORDER BY t.tw_cena_sprz DESC;
 ";
 
 $stmt = sqlsrv_query($conn, $sql);
@@ -74,7 +75,6 @@ echo "<style>
 echo "<table>";
 echo "<tr>
         <th>PLU</th>
-        <th>Nazwa</th>
         <th>VAT</th>
         <th>Aktualna Cena Sprzedaży</th>
         <th>Cena Zakupu NETTO</th>
@@ -85,6 +85,7 @@ echo "<tr>
         <th>Mediana</th>
         <th>Cena Max</th>
         <th>Cena Min</th>
+        <th>Dominanta</th>
         <th>Ilość Wystąpień</th>
         <th>GT Marża</th>
         <th>Minimalna Kwota</th>
@@ -100,7 +101,6 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     
     echo "<tr>";
     echo "<td>" . htmlspecialchars($row['plu_kod']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['tw_nazwa']) . "</td>";
     echo "<td>" . htmlspecialchars($row['tw_VAT']) . "</td>";
     echo "<td>" . number_format((float)$row['tw_cena_sprz'], 2, '.', '') . "</td>";
     echo "<td>" . number_format((float)$row['tw_c_zak'], 2, '.', '') . "</td>";
@@ -111,7 +111,8 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     echo "<td>" . ($row['tk_mediana'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_mediana'], 2, '.', '')) . "</td>";
     echo "<td>" . ($row['tk_cena_max'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_cena_max'], 2, '.', '')) . "</td>";
     echo "<td>" . ($row['tk_cena_min'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_cena_min'], 2, '.', '')) . "</td>";
-    echo "<td>" . htmlspecialchars($row['tk_ilosc_wystapien']) . "</td>";
+    echo "<td>" . ($row['tk_dominanta'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_dominanta'], 2, '.', '')) . "</td>";
+    echo "<td>" . htmlspecialchars($row['tk_ilosc_wystapien'] == 0 ? 'BRAK DANYCH' : $row['tk_ilosc_wystapien']) . "</td>";
     echo "<td>" . htmlspecialchars($row['gt_marza']) . "</td>";
     echo "<td>" . number_format($minimalna_kwota, 2, '.', '') . "</td>";
     echo "</tr>";
