@@ -96,6 +96,11 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $marza = (float)$row['gt_marza'] / 100;
     $cena_zakupu_netto = (float)$row['tw_c_zak'];
     
+    // Sprawdzenie czy cena zakupu wynosi 0 i zastąpienie jej wartością pamp
+    if ($cena_zakupu_netto == 0) {
+        $cena_zakupu_netto = (float)$row['tw_pamp'];
+    }
+    
     // Obliczenie minimalnej kwoty
     $minimalna_kwota = ($cena_zakupu_netto * (1 + $vat)) / (1 - $marza);
     
