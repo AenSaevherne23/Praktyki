@@ -194,6 +194,16 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     }
     
 
+    // Zaokrąglenie $ocs tak, aby część dziesiętna zawsze była 0.09
+    $integerPart = floor($ocs); // Część całkowita liczby
+    $decimalPart = $ocs - $integerPart; // Część dziesiętna liczby
+
+    if ($decimalPart > 0) {
+        $ocs = $integerPart + ceil($decimalPart / 0.1) * 0.1 - 0.01;
+    } else {
+        $ocs = $integerPart + 0.09;
+    }
+
     // Sprawdzenie komunikatu
     if ($minimalna_kwota > $aktualna_cena_sprzedazy) {
         $komunikat = "Aktualna cena sprzedaży jest zbyt niska";
