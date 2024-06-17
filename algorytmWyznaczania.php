@@ -34,9 +34,9 @@ CROSS APPLY
         WHERE LEFT(t.tw_GT, 3) = LEFT(sg.gt_nr, 3)
     ) AS sg
 WHERE 
-    ppmi.tk_ppmi IS NOT NULL
-    OR ppmo.tk_ppmo IS NOT NULL 
-    ORDER BY t.tw_cena_sprz DESC;
+    (ppmi.tk_ppmi IS NOT NULL OR ppmo.tk_ppmo IS NOT NULL)
+    AND ko.tk_srednia_cena IS NOT NULL
+ORDER BY t.tw_cena_sprz DESC;
 ";
 
 $stmt = sqlsrv_query($conn, $sql);
@@ -89,6 +89,8 @@ echo "<tr>
         <th>Ilość Wystąpień</th>
         <th>GT Marża</th>
         <th>Minimalna Kwota</th>
+        <th>OCS</th>
+        <th>Komunikat</th>
       </tr>";
 
 while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
@@ -104,6 +106,113 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     // Obliczenie minimalnej kwoty
     $minimalna_kwota = ($cena_zakupu_netto * (1 + $vat)) / (1 - $marza);
     
+    // Algorytm OCS
+    $ocs = 1;
+    $komunikat = "";
+    $aktualna_cena_sprzedazy = $row['tw_cena_sprz'];
+    $srednia_cena_konkurencja = $row['srednia_cena_konkurencja'];
+    $mediana = $row['tk_mediana']; 
+    $cena_max = $row['tk_cena_max'];
+    $cena_min = $row['tk_cena_min'];
+    $dominanta = $row['tk_dominanta'];
+
+    if($minimalna_kwota <= $cena_min)
+    {
+        if($dominanta >= $srednia_cena_konkurencja)
+        {
+            $ocs = $srednia_cena_konkurencja; //Sprawdzenia PPMI i PPMO
+        }
+        else
+        {
+            $ocs = $dominanta; //Sprawdzenia PPMI i PPMO
+        }
+    }
+    else
+    {
+        if($minimalna_kwota <= $srednia_cena_konkurencja)
+        {
+            if($srednia_cena_konkurencja >= $dominanta)
+            {
+                if($dominanta >= $minimalna_kwota)
+                {
+                    $ocs = $dominanta; //Sprawdzenia PPMI i PPMO
+                }
+                elseif($mediana >= $minimalna_kwota)
+                {
+                    if($mediana >= $srednia_cena_konkurencja)
+                    {
+                        $ocs = $srednia_cena_konkurencja; //Sprawdzenia PPMI i PPMO
+                    }
+                    else
+                    {
+                        $ocs = $mediana; //Sprawdzenia PPMI i PPMO
+                    }
+                }
+                else
+                {
+                    $ocs = $srednia_cena_konkurencja; //Sprawdzenia PPMI i PPMO
+                }
+            }
+            elseif($minimalna_kwota <= $mediana)
+            {
+                if($srednia_cena_konkurencja >= $mediana)
+                {
+                    $ocs = $mediana; //Sprawdzenia PPMI i PPMO
+                }
+                else
+                {
+                    $ocs = $srednia_cena_konkurencja; //Sprawdzenia PPMI i PPMO
+                }
+            }
+            else
+            {
+                $ocs = $srednia_cena_konkurencja; //Sprawdzenia PPMI i PPMO
+            }
+        }
+        elseif($dominanta >= $minimalna_kwota)
+        {
+            $ocs = $dominanta; //Sprawdzenia PPMI i PPMO
+        }
+        else
+        {
+            if($mediana >= $minimalna_kwota)
+            {
+                $ocs = $mediana;
+            }
+            else
+            {
+                if($cena_max >= $minimalna_kwota)
+                {
+                    $ocs = $cena_max; //Sprawdzenia PPMI i PPMO WĄTPLIWE!!!!
+                }
+                else
+                {
+                    $ocs = $cena_max; //NIE WIADOMO CO ROBIĆ
+                }
+            }
+        }
+    }
+    
+
+    // Sprawdzenie komunikatu
+    if ($minimalna_kwota > $aktualna_cena_sprzedazy) {
+        $komunikat = "Aktualna cena sprzedaży jest zbyt niska";
+    }
+
+    // Dodatkowe sprawdzenie PPMI i PPMO
+    if (!empty($row['tk_ppmi'])) {
+        if ($ocs > $row['tk_ppmi']) {
+            $komunikat .= ($komunikat != "") ? " | Cena jest wyższa od rekomendowanej (PPMI)" : "Cena jest wyższa od rekomendowanej (PPMI)";
+        }
+    }
+
+    if (!empty($row['tk_ppmo'])) {
+        if ($ocs < $row['tk_ppmo']) {
+            $komunikat .= ($komunikat != "") ? " | Cena jest niższa od rekomendowanej (PPMO)" : "Cena jest niższa od rekomendowanej (PPMO)";
+        }   
+    }
+
+
     echo "<tr>";
     echo "<td>" . htmlspecialchars($row['plu_kod']) . "</td>";
     echo "<td>" . htmlspecialchars($row['tw_VAT']) . "</td>";
@@ -120,6 +229,8 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     echo "<td>" . htmlspecialchars($row['tk_ilosc_wystapien'] == 0 ? 'BRAK DANYCH' : $row['tk_ilosc_wystapien']) . "</td>";
     echo "<td>" . htmlspecialchars($row['gt_marza']) . "</td>";
     echo "<td>" . number_format($minimalna_kwota, 2, '.', '') . "</td>";
+    echo "<td>" . number_format($ocs, 2, '.', '') . "</td>";
+    echo "<td>" . htmlspecialchars($komunikat) . "</td>";
     echo "</tr>";
 }
 
