@@ -35,7 +35,7 @@ CROSS APPLY
     ) AS sg
 WHERE 
     (ppmi.tk_ppmi IS NOT NULL OR ppmo.tk_ppmo IS NOT NULL)
-    AND ko.tk_srednia_cena IS NOT NULL
+    AND ko.tk_srednia_cena IS NOT NULL 
 ORDER BY t.tw_cena_sprz DESC;
 ";
 
@@ -99,7 +99,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $cena_zakupu_netto = (float)$row['tw_c_zak'];
     
     // Sprawdzenie czy cena zakupu wynosi 0 i zastąpienie jej wartością pamp
-    if ($cena_zakupu_netto == 0) {
+    if ($cena_zakupu_netto < 0.1) {
         $cena_zakupu_netto = (float)$row['tw_pamp'];
     }
     
@@ -206,7 +206,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
 
     // Sprawdzenie komunikatu
     if ($minimalna_kwota > $aktualna_cena_sprzedazy) {
-        $komunikat = "Aktualna cena sprzedaży jest zbyt niska";
+        $komunikat = "Aktualna cena sprzedaży jest zbyt niska aby pokryć Minimalną kwotę";
     }
 
     // Dodatkowe sprawdzenie PPMI i PPMO
