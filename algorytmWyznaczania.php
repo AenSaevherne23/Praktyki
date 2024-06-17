@@ -212,15 +212,19 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     // Dodatkowe sprawdzenie PPMI i PPMO
     if (!empty($row['tk_ppmi'])) {
         if ($ocs > $row['tk_ppmi']) {
-            $komunikat .= ($komunikat != "") ? " | Cena jest wyższa od rekomendowanej (PPMI)" : "Cena jest wyższa od rekomendowanej (PPMI)";
+            $komunikat .= ($komunikat != "") ? " | Cena OCS jest wyższa od rekomendowanej (PPMI)" : "Cena OCS jest wyższa od rekomendowanej (PPMI)";
         }
     }
 
     if (!empty($row['tk_ppmo'])) {
         if ($ocs < $row['tk_ppmo']) {
-            $komunikat .= ($komunikat != "") ? " | Cena jest niższa od rekomendowanej (PPMO)" : "Cena jest niższa od rekomendowanej (PPMO)";
+            $komunikat .= ($komunikat != "") ? " | Cena OCS jest niższa od rekomendowanej (PPMO)" : "Cena OCS jest niższa od rekomendowanej (PPMO)";
         }   
     }
+
+    if ($ocs < $minimalna_kwota) {
+        $komunikat .= ($komunikat != "") ? " | Cena zakupu jest za wysoka aby być konkurencyjną" : "Cena zakupu jest za wysoka aby być konkurencyjną";
+    }   
 
 
     echo "<tr>";
