@@ -16,6 +16,7 @@ SELECT
     ko.tk_cena_min,
     ko.tk_dominanta,
     ko.tk_ilosc_wystapien,
+    ko.tk_ilosc_wys_min,
     sg.gt_marza
 FROM 
     [leclerc].[dbo].[tw__towar] AS t
@@ -85,10 +86,11 @@ echo "<tr>
         <th>Mediana</th>
         <th>Cena Max</th>
         <th>Cena Min</th>
+        <th>Ilość wystąpień minimalnej</th>
         <th>Dominanta</th>
         <th>Ilość Wystąpień</th>
         <th>GT Marża</th>
-        <th>Minimalna Kwota</th>
+        <th>Domyślna cena sprzedaży</th>
         <th>OCS</th>
         <th>Komunikat</th>
       </tr>";
@@ -226,7 +228,6 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
         $komunikat .= ($komunikat != "") ? " | Cena zakupu jest za wysoka aby być konkurencyjną" : "Cena zakupu jest za wysoka aby być konkurencyjną";
     }   
 
-
     echo "<tr>";
     echo "<td>" . htmlspecialchars($row['plu_kod']) . "</td>";
     echo "<td>" . htmlspecialchars($row['tw_VAT']) . "</td>";
@@ -239,6 +240,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     echo "<td>" . ($row['tk_mediana'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_mediana'], 2, '.', '')) . "</td>";
     echo "<td>" . ($row['tk_cena_max'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_cena_max'], 2, '.', '')) . "</td>";
     echo "<td>" . ($row['tk_cena_min'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_cena_min'], 2, '.', '')) . "</td>";
+    echo "<td>" . htmlspecialchars($row['tk_ilosc_wys_min'] == 0 ? 'BRAK DANYCH' : $row['tk_ilosc_wys_min']) . "</td>";
     echo "<td>" . ($row['tk_dominanta'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_dominanta'], 2, '.', '')) . "</td>";
     echo "<td>" . htmlspecialchars($row['tk_ilosc_wystapien'] == 0 ? 'BRAK DANYCH' : $row['tk_ilosc_wystapien']) . "</td>";
     echo "<td>" . htmlspecialchars($row['gt_marza']) . "</td>";
