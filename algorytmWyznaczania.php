@@ -2,11 +2,37 @@
 require_once("config.php");
 
 //funkcje
-function oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max, $ilosc_wys, &$komunikat) {
+function oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max, $ilosc_wys, &$komunikat, $czb) {
     if ($ilosc_wys == 0) {
         $ocs = $cs_domyslna * 1.1;
-        $komunikat = "OCS policzone jako 110% domyślnej ceny sprzedaży, ponieważ ilość wystąpień to 0";
-    } else {
+        $komunikat = "OCS policzone jako 110% domyślnej ceny sprzedaży";
+    } 
+    elseif ($ilosc_wys >= 1 && $ilosc_wys <= 3) {
+        if ($cs_domyslna > $cena_min && $cs_domyslna < $cena_max)
+        {
+            $ocs = $cs_domyslna;
+            $komunikat = "OCS policzone jako cena domyślna. Mieści się między min a max <1,3>";
+        }
+        elseif($cs_domyslna <= $cena_min)
+        {
+            $ocs = $cena_min;
+            $komunikat = "OCS policzone jako cena minimalna <1,3>";
+        }
+        elseif($cs_domyslna >= $cena_max)
+        {
+            if($czb <= $cena_max)
+            {
+                $ocs = $cena_max;
+                $komunikat = "OCS policzone jako cena max <1,3>";
+            }
+            else
+            {
+                $ocs = $czb;
+                $komunikat = "OCS policzone jako czb <1,3>";
+            }
+        }
+    }
+    else {
         if ($cs_domyslna <= $cena_min) {
             if ($dominanta >= $srednia_cena_konkurencja) {
                 $ocs = $srednia_cena_konkurencja;
@@ -179,7 +205,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $cena_min = $row['tk_cena_min'];
     $dominanta = $row['tk_dominanta'];
     $ilosc_wys = $row['tk_ilosc_wystapien'];
-    $czb = $cena_zakupu_netto * (1 + $vat); //To na pewno jest dobrze?
+    $czb = $cena_zakupu_netto * (1 + $vat) * (1 + $marza); //To na pewno jest dobrze?
     
     //sprawdzenie ppmi/ppmo i dodanie ich do zmiennych
     if (!empty($row['tk_ppmi'])) 
@@ -210,7 +236,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
             $komunikat = "OCS policzone jako PPMO";
             break;
         default:
-            $ocs = oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max, $ilosc_wys, $komunikat);
+            $ocs = oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max, $ilosc_wys, $komunikat, $czb);
     }    
 
     // Zaokrąglenie $ocs tak, aby część dziesiętna zawsze była 0.09
