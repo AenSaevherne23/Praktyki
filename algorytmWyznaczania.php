@@ -2,50 +2,66 @@
 require_once("config.php");
 
 //funkcje
-function oblicz_ocs($minimalna_kwota, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max) {
-    if ($minimalna_kwota <= $cena_min) {
-        if ($dominanta >= $srednia_cena_konkurencja) {
-            $ocs = $srednia_cena_konkurencja;
-        } else {
-            $ocs = $dominanta;
-        }
+function oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max, $ilosc_wys, &$komunikat) {
+    if ($ilosc_wys == 0) {
+        $ocs = $cs_domyslna * 1.1;
+        $komunikat = "OCS policzone jako 110% domyślnej ceny sprzedaży, ponieważ ilość wystąpień to 0";
     } else {
-        if ($minimalna_kwota <= $srednia_cena_konkurencja) {
-            if ($srednia_cena_konkurencja >= $dominanta) {
-                if ($dominanta >= $minimalna_kwota) {
-                    $ocs = $dominanta;
-                } elseif ($mediana >= $minimalna_kwota) {
-                    if ($mediana >= $srednia_cena_konkurencja) {
-                        $ocs = $srednia_cena_konkurencja;
+        if ($cs_domyslna <= $cena_min) {
+            if ($dominanta >= $srednia_cena_konkurencja) {
+                $ocs = $srednia_cena_konkurencja;
+                $komunikat = "OCS policzone jako średnia cena konkurencji";
+            } else {
+                $ocs = $dominanta;
+                $komunikat = "OCS policzone jako dominanta";
+            }
+        } else {
+            if ($cs_domyslna <= $srednia_cena_konkurencja) {
+                if ($srednia_cena_konkurencja >= $dominanta) {
+                    if ($dominanta >= $cs_domyslna) {
+                        $ocs = $dominanta;
+                        $komunikat = "OCS policzone jako dominanta";
+                    } elseif ($mediana >= $cs_domyslna) {
+                        if ($mediana >= $srednia_cena_konkurencja) {
+                            $ocs = $srednia_cena_konkurencja;
+                            $komunikat = "OCS policzone jako średnia cena konkurencji";
+                        } else {
+                            $ocs = $mediana;
+                            $komunikat = "OCS policzone jako mediana";
+                        }
                     } else {
+                        $ocs = $srednia_cena_konkurencja;
+                        $komunikat = "OCS policzone jako średnia cena konkurencji";
+                    }
+                } elseif ($cs_domyslna <= $mediana) {
+                    if ($srednia_cena_konkurencja >= $mediana) {
                         $ocs = $mediana;
+                        $komunikat = "OCS policzone jako mediana";
+                    } else {
+                        $ocs = $srednia_cena_konkurencja;
+                        $komunikat = "OCS policzone jako średnia cena konkurencji";
                     }
                 } else {
                     $ocs = $srednia_cena_konkurencja;
+                    $komunikat = "OCS policzone jako średnia cena konkurencji";
                 }
-            } elseif ($minimalna_kwota <= $mediana) {
-                if ($srednia_cena_konkurencja >= $mediana) {
+            } elseif ($dominanta >= $cs_domyslna) {
+                $ocs = $dominanta;
+                $komunikat = "OCS policzone jako dominanta";
+            } else {
+                if ($mediana >= $cs_domyslna) {
                     $ocs = $mediana;
+                    $komunikat = "OCS policzone jako mediana";
                 } else {
-                    $ocs = $srednia_cena_konkurencja;
+                    $ocs = $cena_max >= $cs_domyslna ? $cena_max : $cena_max;
+                    $komunikat = "OCS policzone jako cena maksymalna";
                 }
-            } else {
-                $ocs = $srednia_cena_konkurencja;
-            }
-        } elseif ($dominanta >= $minimalna_kwota) {
-            $ocs = $dominanta;
-        } else {
-            if ($mediana >= $minimalna_kwota) {
-                $ocs = $mediana;
-            } else {
-                $ocs = $cena_max >= $minimalna_kwota ? $cena_max : $cena_max;
             }
         }
     }
+    
     return $ocs;
-}
-
-
+} 
 
 $sql = "
 SELECT 
@@ -81,8 +97,7 @@ CROSS APPLY
         WHERE LEFT(t.tw_GT, 3) = LEFT(sg.gt_nr, 3)
     ) AS sg
 WHERE 
-    (ppmi.tk_ppmi IS NOT NULL OR ppmo.tk_ppmo IS NOT NULL)
-    AND ko.tk_srednia_cena IS NOT NULL 
+    ppmi.tk_ppmi IS NOT NULL OR ppmo.tk_ppmo IS NOT NULL
 ORDER BY t.tw_cena_sprz DESC;
 ";
 
@@ -152,7 +167,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     }
     
     // Obliczenie minimalnej kwoty
-    $minimalna_kwota = ($cena_zakupu_netto * (1 + $vat)) / (1 - $marza);
+    $cs_domyslna = ($cena_zakupu_netto * (1 + $vat)) / (1 - $marza);
     
     // Zmienne
     $ocs = null;
@@ -163,7 +178,8 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $cena_max = $row['tk_cena_max'];
     $cena_min = $row['tk_cena_min'];
     $dominanta = $row['tk_dominanta'];
-    $czb = $cena_zakupu_netto * (1 + $vat);
+    $ilosc_wys = $row['tk_ilosc_wystapien'];
+    $czb = $cena_zakupu_netto * (1 + $vat); //To na pewno jest dobrze?
     
     //sprawdzenie ppmi/ppmo i dodanie ich do zmiennych
     if (!empty($row['tk_ppmi'])) 
@@ -184,21 +200,18 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
         $ppmo = null;
     }
 
-
-
     switch (true) {
         case ($ppmi !== null && $ppmi <= $cena_min && $czb < $ppmi):
             $ocs = $ppmi;
+            $komunikat = "OCS policzone jako PPMI";
             break;
         case ($ppmo !== null && $ppmo < $dominanta && $ppmo < $srednia_cena_konkurencja && $ppmo < $mediana):
             $ocs = $ppmo;
+            $komunikat = "OCS policzone jako PPMO";
             break;
         default:
-            $ocs = oblicz_ocs($minimalna_kwota, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max);
+            $ocs = oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max, $ilosc_wys, $komunikat);
     }    
-    
-
-    
 
     // Zaokrąglenie $ocs tak, aby część dziesiętna zawsze była 0.09
     $integerPart = floor($ocs); // Część całkowita liczby
@@ -209,28 +222,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     } else {
         $ocs = $integerPart + 0.09;
     }
-
-    // Sprawdzenie komunikatu
-    if ($minimalna_kwota > $aktualna_cena_sprzedazy) {
-        $komunikat = "Aktualna cena sprzedaży jest zbyt niska aby pokryć Minimalną kwotę";
-    }
-
-    // Dodatkowe sprawdzenie PPMI i PPMO
-    if (!empty($row['tk_ppmi'])) {
-        if ($ocs > $row['tk_ppmi']) {
-            $komunikat .= ($komunikat != "") ? " | Cena OCS jest wyższa od rekomendowanej (PPMI)" : "Cena OCS jest wyższa od rekomendowanej (PPMI)";
-        }
-    }
-
-    if (!empty($row['tk_ppmo'])) {
-        if ($ocs < $row['tk_ppmo']) {
-            $komunikat .= ($komunikat != "") ? " | Cena OCS jest niższa od rekomendowanej (PPMO)" : "Cena OCS jest niższa od rekomendowanej (PPMO)";
-        }   
-    }
-
-    if ($ocs < $minimalna_kwota) {
-        $komunikat .= ($komunikat != "") ? " | Cena zakupu jest za wysoka aby być konkurencyjną" : "Cena zakupu jest za wysoka aby być konkurencyjną";
-    }   
+ 
 
     echo "<tr>";
     echo "<td>" . htmlspecialchars($row['plu_kod']) . "</td>";
@@ -248,7 +240,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     echo "<td>" . ($row['tk_dominanta'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_dominanta'], 2, '.', '')) . "</td>";
     echo "<td>" . htmlspecialchars($row['tk_ilosc_wystapien'] == 0 ? 'BRAK DANYCH' : $row['tk_ilosc_wystapien']) . "</td>";
     echo "<td>" . htmlspecialchars($row['gt_marza']) . "</td>";
-    echo "<td>" . number_format($minimalna_kwota, 2, '.', '') . "</td>";
+    echo "<td>" . number_format($cs_domyslna, 2, '.', '') . "</td>";
     echo "<td>" . number_format($ocs, 2, '.', '') . "</td>";
     echo "<td>" . htmlspecialchars($komunikat) . "</td>";
     echo "</tr>";
