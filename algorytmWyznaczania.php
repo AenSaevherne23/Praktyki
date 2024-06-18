@@ -1,6 +1,52 @@
 <?php
 require_once("config.php");
 
+//funkcje
+function oblicz_ocs($minimalna_kwota, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max) {
+    if ($minimalna_kwota <= $cena_min) {
+        if ($dominanta >= $srednia_cena_konkurencja) {
+            $ocs = $srednia_cena_konkurencja;
+        } else {
+            $ocs = $dominanta;
+        }
+    } else {
+        if ($minimalna_kwota <= $srednia_cena_konkurencja) {
+            if ($srednia_cena_konkurencja >= $dominanta) {
+                if ($dominanta >= $minimalna_kwota) {
+                    $ocs = $dominanta;
+                } elseif ($mediana >= $minimalna_kwota) {
+                    if ($mediana >= $srednia_cena_konkurencja) {
+                        $ocs = $srednia_cena_konkurencja;
+                    } else {
+                        $ocs = $mediana;
+                    }
+                } else {
+                    $ocs = $srednia_cena_konkurencja;
+                }
+            } elseif ($minimalna_kwota <= $mediana) {
+                if ($srednia_cena_konkurencja >= $mediana) {
+                    $ocs = $mediana;
+                } else {
+                    $ocs = $srednia_cena_konkurencja;
+                }
+            } else {
+                $ocs = $srednia_cena_konkurencja;
+            }
+        } elseif ($dominanta >= $minimalna_kwota) {
+            $ocs = $dominanta;
+        } else {
+            if ($mediana >= $minimalna_kwota) {
+                $ocs = $mediana;
+            } else {
+                $ocs = $cena_max >= $minimalna_kwota ? $cena_max : $cena_max;
+            }
+        }
+    }
+    return $ocs;
+}
+
+
+
 $sql = "
 SELECT 
     p.plu_kod,
@@ -108,8 +154,8 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     // Obliczenie minimalnej kwoty
     $minimalna_kwota = ($cena_zakupu_netto * (1 + $vat)) / (1 - $marza);
     
-    // Algorytm OCS
-    $ocs = 1;
+    // Zmienne
+    $ocs = null;
     $komunikat = "";
     $aktualna_cena_sprzedazy = $row['tw_cena_sprz'];
     $srednia_cena_konkurencja = $row['srednia_cena_konkurencja'];
@@ -117,83 +163,41 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $cena_max = $row['tk_cena_max'];
     $cena_min = $row['tk_cena_min'];
     $dominanta = $row['tk_dominanta'];
-
-    if($minimalna_kwota <= $cena_min)
+    $czb = $cena_zakupu_netto * (1 + $vat);
+    
+    //sprawdzenie ppmi/ppmo i dodanie ich do zmiennych
+    if (!empty($row['tk_ppmi'])) 
     {
-        if($dominanta >= $srednia_cena_konkurencja)
-        {
-            $ocs = $srednia_cena_konkurencja; //Sprawdzenia PPMI i PPMO
-        }
-        else
-        {
-            $ocs = $dominanta; //Sprawdzenia PPMI i PPMO
-        }
+        $ppmi = $row['tk_ppmi'];
     }
     else
     {
-        if($minimalna_kwota <= $srednia_cena_konkurencja)
-        {
-            if($srednia_cena_konkurencja >= $dominanta)
-            {
-                if($dominanta >= $minimalna_kwota)
-                {
-                    $ocs = $dominanta; //Sprawdzenia PPMI i PPMO
-                }
-                elseif($mediana >= $minimalna_kwota)
-                {
-                    if($mediana >= $srednia_cena_konkurencja)
-                    {
-                        $ocs = $srednia_cena_konkurencja; //Sprawdzenia PPMI i PPMO
-                    }
-                    else
-                    {
-                        $ocs = $mediana; //Sprawdzenia PPMI i PPMO
-                    }
-                }
-                else
-                {
-                    $ocs = $srednia_cena_konkurencja; //Sprawdzenia PPMI i PPMO
-                }
-            }
-            elseif($minimalna_kwota <= $mediana)
-            {
-                if($srednia_cena_konkurencja >= $mediana)
-                {
-                    $ocs = $mediana; //Sprawdzenia PPMI i PPMO
-                }
-                else
-                {
-                    $ocs = $srednia_cena_konkurencja; //Sprawdzenia PPMI i PPMO
-                }
-            }
-            else
-            {
-                $ocs = $srednia_cena_konkurencja; //Sprawdzenia PPMI i PPMO
-            }
-        }
-        elseif($dominanta >= $minimalna_kwota)
-        {
-            $ocs = $dominanta; //Sprawdzenia PPMI i PPMO
-        }
-        else
-        {
-            if($mediana >= $minimalna_kwota)
-            {
-                $ocs = $mediana;
-            }
-            else
-            {
-                if($cena_max >= $minimalna_kwota)
-                {
-                    $ocs = $cena_max; //Sprawdzenia PPMI i PPMO WĄTPLIWE!!!!
-                }
-                else
-                {
-                    $ocs = $cena_max; //NIE WIADOMO CO ROBIĆ
-                }
-            }
-        }
+        $ppmi = null;
     }
+
+    if (!empty($row['tk_ppmo'])) 
+    {
+        $ppmo = $row['tk_ppmo'];
+    }
+    else
+    {
+        $ppmo = null;
+    }
+
+
+
+    switch (true) {
+        case ($ppmi !== null && $ppmi <= $cena_min && $czb < $ppmi):
+            $ocs = $ppmi;
+            break;
+        case ($ppmo !== null && $ppmo < $dominanta && $ppmo < $srednia_cena_konkurencja && $ppmo < $mediana):
+            $ocs = $ppmo;
+            break;
+        default:
+            $ocs = oblicz_ocs($minimalna_kwota, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max);
+    }    
+    
+
     
 
     // Zaokrąglenie $ocs tak, aby część dziesiętna zawsze była 0.09
