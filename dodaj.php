@@ -69,7 +69,7 @@
             }
 
             // Pobranie istniejących obliczeń dla wszystkich EAN-ów
-            $zapytanie_obliczenia = "SELECT tk_plu, tk_srednia_cena, tk_mediana, tk_dominanta, tk_cena_max, tk_cena_min 
+            $zapytanie_obliczenia = "SELECT tk_plu, tk_srednia_cena, tk_mediana, tk_dominanta, tk_cena_max, tk_cena_min, tk_ilosc_wys_min 
                                      FROM dbo.tw_konkurencja_obliczenia 
                                      WHERE tk_plu IN ('$eany_string')";
             $wynik_obliczenia = sqlsrv_query($conn, $zapytanie_obliczenia);
@@ -142,12 +142,24 @@
                 // Obliczenie dominanty z przefiltrowanych cen
                 $dominanta = array_count_values(array_map('strval', $cenyProduktow));
                 $maxOccurrences = max($dominanta);
-                $pierwszaDominanta = array_search($maxOccurrences, $dominanta);
+                $dominanty = array_keys($dominanta, $maxOccurrences);
+                $pierwszaDominanta = null;
 
-                // Sprawdzenie, czy istnieje więcej niż jedna dominanta
-                foreach ($dominanta as $key => $value) {
-                    if ($value === $maxOccurrences && $key > $pierwszaDominanta) {
-                        $pierwszaDominanta = $key;
+                // Sprawdzenie, czy są wartości z największą ilością wystąpień
+                if ($maxOccurrences > 1) {
+                    if (count($dominanty) > 1) {
+                        $najblizszaDominanta = null;
+                        $minimalnaRoznica = PHP_INT_MAX;
+                        foreach ($dominanty as $dominanta) {
+                            $roznica = abs($dominanta - $medianaFiltr);
+                            if ($roznica < $minimalnaRoznica) {
+                                $minimalnaRoznica = $roznica;
+                                $najblizszaDominanta = $dominanta;
+                            }
+                        }
+                        $pierwszaDominanta = $najblizszaDominanta;
+                    } else {
+                        $pierwszaDominanta = $dominanty[0];
                     }
                 }
 
@@ -155,10 +167,15 @@
                 $cenaMin = min($cenyProduktow);
                 $cenaMax = max($cenyProduktow);
 
+                // Obliczenie ilości wystąpień minimalnej ceny
+                $iloscWysMin = count(array_filter($cenyProduktow, function ($cena) use ($cenaMin) {
+                    return $cena == $cenaMin;
+                }));
+
                 // Zaokrąglanie wartości do dwóch miejsc po przecinku
                 $sredniaCenaProduktow = round($sredniaCenaProduktow, 2);
                 $medianaFiltr = round($medianaFiltr, 2);
-                $pierwszaDominanta = round($pierwszaDominanta, 2);
+                $pierwszaDominanta = is_null($pierwszaDominanta) ? null : round($pierwszaDominanta, 2);
                 $cenaMin = round($cenaMin, 2);
                 $cenaMax = round($cenaMax, 2);
 
@@ -167,12 +184,12 @@
                     $existingRow = $obliczenia[$ean];
 
                     // Sprawdzanie, czy wartości są różne
-                    if ($existingRow['tk_srednia_cena'] != $sredniaCenaProduktow || $existingRow['tk_mediana'] != $medianaFiltr || $existingRow['tk_dominanta'] != $pierwszaDominanta || $existingRow['tk_cena_min'] != $cenaMin || $existingRow['tk_cena_max'] != $cenaMax) {
+                    if ($existingRow['tk_srednia_cena'] != $sredniaCenaProduktow || $existingRow['tk_mediana'] != $medianaFiltr || $existingRow['tk_dominanta'] != $pierwszaDominanta || $existingRow['tk_cena_min'] != $cenaMin || $existingRow['tk_cena_max'] != $cenaMax || $existingRow['tk_ilosc_wys_min'] != $iloscWysMin) {
                         // Aktualizacja rekordu
                         $updateQuery = "UPDATE dbo.tw_konkurencja_obliczenia 
-                                        SET tk_ilosc_wystapien = ?, tk_srednia_cena = ?, tk_mediana = ?, tk_dominanta = ?, tk_cena_max = ?, tk_cena_min = ?, tk_zaktualizowano = GETDATE() 
+                                        SET tk_ilosc_wystapien = ?, tk_srednia_cena = ?, tk_mediana = ?, tk_dominanta = ?, tk_cena_max = ?, tk_cena_min = ?, tk_ilosc_wys_min = ?, tk_zaktualizowano = GETDATE() 
                                         WHERE tk_plu = ?";
-                        $updateParams = array($liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltr, $pierwszaDominanta, $cenaMax, $cenaMin, $ean);
+                        $updateParams = array($liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltr, $pierwszaDominanta, $cenaMax, $cenaMin, $iloscWysMin, $ean);
                         $updateResult = sqlsrv_query($conn, $updateQuery, $updateParams);
 
                         if ($updateResult === false) {
@@ -182,11 +199,11 @@
                 } else {
                     // Wstawianie nowych wyników do bazy danych
                     $insertQuery = "INSERT INTO dbo.tw_konkurencja_obliczenia (
-                                        tk_plu, tk_ilosc_wystapien, tk_srednia_cena, tk_mediana, tk_dominanta, tk_cena_max, tk_cena_min, tk_zaktualizowano
+                                        tk_plu, tk_ilosc_wystapien, tk_srednia_cena, tk_mediana, tk_dominanta, tk_cena_max, tk_cena_min, tk_ilosc_wys_min, tk_zaktualizowano
                                         ) VALUES (
-                                        ?, ?, ?, ?, ?, ?, ?, GETDATE()
+                                        ?, ?, ?, ?, ?, ?, ?, ?, GETDATE()
                                         )";
-                    $insertParams = array($ean, $liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltr, $pierwszaDominanta, $cenaMax, $cenaMin);
+                    $insertParams = array($ean, $liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltr, $pierwszaDominanta, $cenaMax, $cenaMin, $iloscWysMin);
                     $insertResult = sqlsrv_query($conn, $insertQuery, $insertParams);
 
                     if ($insertResult === false) {
