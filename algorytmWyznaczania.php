@@ -3,7 +3,8 @@ require_once("config.php");
 
 //funkcje
 function oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max, $ilosc_wys, &$komunikat, $czb, $ilosc_wys_min) {
-    if ($ilosc_wys == 0) {
+    if ($ilosc_wys == 0)
+    {
         $ocs = $cs_domyslna * 1.1;
         $komunikat = "OCS policzone jako 110% domyślnej ceny sprzedaży";
     } 
@@ -37,7 +38,9 @@ function oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurenc
         {
             if($cs_domyslna <= $cena_min)
             {
-                if($ilosc_wys_min > 1){
+                $prop_minimalnej = $ilosc_wys_min / $ilosc_wys;
+                if($prop_minimalnej >= 0.3)
+                {
                     $ocs = $cena_min;
                     $komunikat = "OCS policzone jako cena_min <4,∞> (dominanta)";
                 }
