@@ -2,7 +2,7 @@
 require_once("config.php");
 
 //funkcje
-function oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max, $ilosc_wys, &$komunikat, $czb) {
+function oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max, $ilosc_wys, &$komunikat, $czb, $ilosc_wys_min) {
     if ($ilosc_wys == 0) {
         $ocs = $cs_domyslna * 1.1;
         $komunikat = "OCS policzone jako 110% domyślnej ceny sprzedaży";
@@ -33,54 +33,156 @@ function oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurenc
         }
     }
     else {
-        if ($cs_domyslna <= $cena_min) {
-            if ($dominanta >= $srednia_cena_konkurencja) {
-                $ocs = $srednia_cena_konkurencja;
-                $komunikat = "OCS policzone jako średnia cena konkurencji";
-            } else {
-                $ocs = $dominanta;
-                $komunikat = "OCS policzone jako dominanta";
-            }
-        } else {
-            if ($cs_domyslna <= $srednia_cena_konkurencja) {
-                if ($srednia_cena_konkurencja >= $dominanta) {
-                    if ($dominanta >= $cs_domyslna) {
-                        $ocs = $dominanta;
-                        $komunikat = "OCS policzone jako dominanta";
-                    } elseif ($mediana >= $cs_domyslna) {
-                        if ($mediana >= $srednia_cena_konkurencja) {
-                            $ocs = $srednia_cena_konkurencja;
-                            $komunikat = "OCS policzone jako średnia cena konkurencji";
-                        } else {
-                            $ocs = $mediana;
-                            $komunikat = "OCS policzone jako mediana";
-                        }
-                    } else {
-                        $ocs = $srednia_cena_konkurencja;
-                        $komunikat = "OCS policzone jako średnia cena konkurencji";
-                    }
-                } elseif ($cs_domyslna <= $mediana) {
-                    if ($srednia_cena_konkurencja >= $mediana) {
-                        $ocs = $mediana;
-                        $komunikat = "OCS policzone jako mediana";
-                    } else {
-                        $ocs = $srednia_cena_konkurencja;
-                        $komunikat = "OCS policzone jako średnia cena konkurencji";
-                    }
-                } else {
-                    $ocs = $srednia_cena_konkurencja;
-                    $komunikat = "OCS policzone jako średnia cena konkurencji";
+        if ($dominanta !== null)
+        {
+            if($cs_domyslna <= $cena_min)
+            {
+                if($ilosc_wys_min > 1){
+                    $ocs = $cena_min;
+                    $komunikat = "OCS policzone jako cena_min <4,∞> (dominanta)";
                 }
-            } elseif ($dominanta >= $cs_domyslna) {
+                elseif($srednia_cena_konkurencja > $dominanta){
+                    $ocs = $dominanta;
+                    $komunikat = "OCS policzone jako dominanta <4,∞> (dominanta)";
+                }
+                else{
+                    $ocs = $srednia_cena_konkurencja;
+                    $komunikat = "OCS policzone jako sr_cena <4,∞> (dominanta)";
+                }  
+            }
+            elseif ($cs_domyslna <= $dominanta)
+            {
                 $ocs = $dominanta;
-                $komunikat = "OCS policzone jako dominanta";
-            } else {
-                if ($mediana >= $cs_domyslna) {
+                $komunikat = "OCS policzone jako dominanta <4,∞> (dominanta)";
+            }
+            else
+            {
+                if($cs_domyslna <= $srednia_cena_konkurencja)
+                {
+                    if($srednia_cena_konkurencja <= $mediana)
+                    {
+                        $ocs = $srednia_cena_konkurencja;
+                        $komunikat = "OCS policzone jako sr_cena <4,∞> (dominanta)";
+                    }
+                    elseif($cs_domyslna >= $mediana)
+                    {
+                        $ocs = $srednia_cena_konkurencja;
+                        $komunikat = "OCS policzone jako sr_cena <4,∞> (dominanta)";
+                    }
+                    else
+                    {
+                        $ocs = $mediana;
+                        $komunikat = "OCS policzone jako mediana <4,∞> (dominanta)";
+                    }
+                }
+                else 
+                {
+                    //Czy o to chodziło?
+                    if($czb <= $dominanta)
+                    {
+                        $ocs = $dominanta;
+                        $komunikat = "OCS policzone jako dominanta (czb) <4,∞> (dominanta)";
+
+                    }
+                    elseif($czb <= $srednia_cena_konkurencja)
+                    {
+                        if($srednia_cena_konkurencja <= $mediana)
+                        {
+                            $ocs = $srednia_cena_konkurencja;
+                            $komunikat = "OCS policzone jako sr_cena (czb) <4,∞> (dominanta)";
+                        }
+                        elseif($czb >= $mediana)
+                        {
+                            $ocs = $srednia_cena_konkurencja;
+                            $komunikat = "OCS policzone jako sr_cena (czb) <4,∞> (dominanta)";
+                        }
+                        else
+                        {
+                            $ocs = $mediana;
+                            $komunikat = "OCS policzone jako mediana (czb) <4,∞> (dominanta)";
+                        }
+                    }
+                    elseif($czb <= $cena_max)
+                    {
+                        $ocs = $cena_max;
+                        $komunikat = "OCS policzone jako cena_max (czb) <4,∞> (dominanta)";
+                    }
+                    else
+                    {
+                        $ocs = $czb;
+                        $komunikat = "OCS policzone jako czb (czb) <4,∞> (dominanta)";
+                    }
+                }
+            }
+        }
+        else //Nie ma dominanty
+        {
+            if($cs_domyslna <= $cena_min)
+            {
+                if($ilosc_wys_min > 1){
+                    $ocs = $cena_min;
+                    $komunikat = "OCS policzone jako cena_min <4,∞> (bez dominanty)";
+                }
+                elseif($mediana > $srednia_cena_konkurencja){
+                    $ocs = $srednia_cena_konkurencja;
+                    $komunikat = "OCS policzone jako sr_cena <4,∞> (bez dominanty)";
+                }
+                else{
                     $ocs = $mediana;
-                    $komunikat = "OCS policzone jako mediana";
-                } else {
-                    $ocs = $cena_max >= $cs_domyslna ? $cena_max : $cena_max;
-                    $komunikat = "OCS policzone jako cena maksymalna";
+                    $komunikat = "OCS policzone jako mediana <4,∞> (bez dominanty)";
+                }  
+            }
+            elseif($cs_domyslna <= $srednia_cena_konkurencja)
+            {
+                if($cs_domyslna <= $mediana)
+                {
+                    if($srednia_cena_konkurencja >= $mediana)
+                    {
+                        $ocs = $mediana;
+                        $komunikat = "OCS policzone jako mediana <4,∞> (bez dominanty)";
+                    }
+                    else
+                    {
+                        $ocs = $srednia_cena_konkurencja;
+                        $komunikat = "OCS policzone jako sr_cena <4,∞> (bez dominanty)";
+                    }
+                }
+                else
+                {
+                    $ocs = $srednia_cena_konkurencja;
+                    $komunikat = "OCS policzone jako sr_cena <4,∞> (bez dominanty)";
+                }
+            }
+            else
+            {
+                //Czy o to chodziło? v2
+                if($czb <= $srednia_cena_konkurencja)
+                    {
+                        if($srednia_cena_konkurencja <= $mediana)
+                        {
+                            $ocs = $srednia_cena_konkurencja;
+                            $komunikat = "OCS policzone jako sr_cena (czb) <4,∞> (bez dominanty)";
+                        }
+                        elseif($czb >= $mediana)
+                        {
+                            $ocs = $srednia_cena_konkurencja;
+                            $komunikat = "OCS policzone jako sr_cena (czb) <4,∞> (bez dominanty)";
+                        }
+                        else
+                        {
+                            $ocs = $mediana;
+                            $komunikat = "OCS policzone jako mediana (czb) <4,∞> (bez dominanty)";
+                        }
+                    }
+                elseif($czb <= $cena_max)
+                {
+                    $ocs = $cena_max;
+                    $komunikat = "OCS policzone jako cena_max (czb) <4,∞> (bez dominanty)";
+                }
+                else
+                {
+                    $ocs = $czb;
+                    $komunikat = "OCS policzone jako czb (czb) <4,∞> (bez dominanty)";
                 }
             }
         }
@@ -206,6 +308,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $dominanta = $row['tk_dominanta'];
     $ilosc_wys = $row['tk_ilosc_wystapien'];
     $czb = $cena_zakupu_netto * (1 + $vat) * (1 + $marza); //To na pewno jest dobrze?
+    $ilosc_wys_min = $row['tk_ilosc_wys_min'];
     
     //sprawdzenie ppmi/ppmo i dodanie ich do zmiennych
     if (!empty($row['tk_ppmi'])) 
@@ -236,7 +339,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
             $komunikat = "OCS policzone jako PPMO";
             break;
         default:
-            $ocs = oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max, $ilosc_wys, $komunikat, $czb);
+            $ocs = oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max, $ilosc_wys, $komunikat, $czb, $ilosc_wys_min);
     }    
 
     // Zaokrąglenie $ocs tak, aby część dziesiętna zawsze była 0.09
