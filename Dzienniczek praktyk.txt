@@ -20,8 +20,24 @@ DZIEŃ		OPIS								ILOŚĆ GODZIN
 12.06.2024	Udoskalanie skryptu o dodatkowe funkcjonalności, m. in.		8 h
 		takie jak data i godzina ostatniej modyfikacji rekordu.
 
-13.06.2024	Rozpoczęcia prac nad skryptem, który będzie wykorzystywał	8 h
+13.06.2024	Rozpoczęcie prac nad skryptem, który będzie wykorzystywał	8 h
 		uzyskane dane z poprzednich skryptów.
 
 14.06.2024	Kontynuowanie prac nad skryptem, który obecnie ma formę		8 h	
 		graficzną (drzewo decyzyjne).	
+
+17.06.2024	Programowanie algorytmu wyznaczania cen produktów		8 h
+		na podstaiwe wcześniej stworzonego diagramu drzewa decyzji.
+		Rozwiązywanie problemów wdrożeniowych
+		oraz tworzenie komunikatów błędów.
+
+18.06.2024	Konsultacja z szefem na temat algorytmu. Opisanie poprawek	8 h
+		oraz rozpoczęcie pracy nad nimi.
+
+19.06.2024	Praca nad poprawieniem algorytmu według wczorajszych zaleceń.	8 h
+		Ponowne sprawdzanie algorytmu w poszukiwaniu błędów
+		i skrajnych przypadków.
+
+20.06.2024	Projektowanie funkcji określającej wiarygodność			8 h
+		ceny minimalnej. Testowanie działań funkcji dla skrajnych 
+		przypadków.
