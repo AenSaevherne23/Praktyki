@@ -41,3 +41,7 @@ DZIEŃ		OPIS								ILOŚĆ GODZIN
 20.06.2024	Projektowanie funkcji określającej wiarygodność			8 h
 		ceny minimalnej. Testowanie działań funkcji dla skrajnych 
 		przypadków.
+
+21.06.2024	Tworzenie nowego drzewka decyzyjnego po uwzględnieniu		8 h
+		wszystkich uwag i naszych poprawek. Ulepszenie skryptu 	
+		importującego dane z arkusza kalkulacyjnego. 	
