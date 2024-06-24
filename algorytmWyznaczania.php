@@ -317,7 +317,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $ilosc_wys = $row['tk_ilosc_wystapien'];
     $czb = $cena_zakupu_netto * (1 + $vat);
     $ilosc_wys_min = $row['tk_ilosc_wys_min'];
-    $odchylenie_marzy = 0.03;
+    $dop_marza_uj = 0.2; //dopuszczalna marza ujemna
     
     //sprawdzenie ppmi/ppmo i dodanie ich do zmiennych
     if (!empty($row['tk_ppmi'])) 
@@ -341,7 +341,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     
     switch (true) {
         case ($ppmi !== null && $ppmi <= $cena_min && $czb < $ppmi):
-            if ($cena_zakupu_netto < $ppmi && (1 - ($czb/$ppmi)) < ($marza - $odchylenie_marzy)) 
+            if (($czb *(1-$dop_marza_uj)) > $ppmi) 
             {
                 $ocs = $czb;
                 $komunikat = "OCS policzone jako CZB (ppmi)";
@@ -354,7 +354,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
            
             break;
         case ($ppmo !== null && $ppmo < $dominanta && $ppmo < $srednia_cena_konkurencja && $ppmo < $mediana):
-            if ($cena_zakupu_netto < $ppmo && (1 - ($czb/$ppmo)) < ($marza - $odchylenie_marzy)) 
+            if (($czb *(1-$dop_marza_uj)) > $ppmo) 
             {
                 $ocs = $czb;
                 $komunikat = "OCS policzone jako CZB (ppmo)";
