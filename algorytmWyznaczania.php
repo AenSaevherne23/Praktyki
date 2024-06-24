@@ -72,6 +72,11 @@ function oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurenc
                         $ocs = $srednia_cena_konkurencja;
                         $komunikat = "OCS policzone jako sr_cena <4,∞> (dominanta)";
                     }
+                    elseif($czb>=$mediana)
+                    {
+                        $ocs = $czb;
+                        $komunikat = "OCS policzone jako CZB <4,∞> (dominanta)";
+                    }
                     else
                     {
                         $ocs = $mediana;
@@ -310,7 +315,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $cena_min = $row['tk_cena_min'];
     $dominanta = $row['tk_dominanta'];
     $ilosc_wys = $row['tk_ilosc_wystapien'];
-    $czb = $cena_zakupu_netto * (1 + $vat) * (1 + $marza); //To na pewno jest dobrze?
+    $czb = $cena_zakupu_netto * (1 + $vat);
     $ilosc_wys_min = $row['tk_ilosc_wys_min'];
     
     //sprawdzenie ppmi/ppmo i dodanie ich do zmiennych
@@ -332,14 +337,32 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
         $ppmo = null;
     }
 
+    
     switch (true) {
         case ($ppmi !== null && $ppmi <= $cena_min && $czb < $ppmi):
-            $ocs = $ppmi;
-            $komunikat = "OCS policzone jako PPMI";
+            if ($cena_zakupu_netto < $ppmi && (1 - ($czb/$ppmi)) < ($marza - 0.03)) 
+            {
+                $ocs = $czb;
+                $komunikat = "OCS policzone jako CZB (ppmi)";
+            }
+            else
+            {
+                $ocs = $ppmi;
+                $komunikat = "OCS policzone jako PPMI";
+            }
+           
             break;
         case ($ppmo !== null && $ppmo < $dominanta && $ppmo < $srednia_cena_konkurencja && $ppmo < $mediana):
-            $ocs = $ppmo;
-            $komunikat = "OCS policzone jako PPMO";
+            if ($cena_zakupu_netto < $ppmo && (1 - ($czb/$ppmo)) < ($marza - 0.03)) 
+            {
+                $ocs = $czb;
+                $komunikat = "OCS policzone jako CZB (ppmo)";
+            }
+            else
+            {
+                $ocs = $ppmo;
+                $komunikat = "OCS policzone jako PPMO";
+            }
             break;
         default:
             $ocs = oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurencja, $mediana, $cena_max, $ilosc_wys, $komunikat, $czb, $ilosc_wys_min);
