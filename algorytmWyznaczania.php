@@ -17,7 +17,7 @@ function oblicz_ocs($cs_domyslna, $cena_min, $dominanta, $srednia_cena_konkurenc
         elseif($cs_domyslna <= $cena_min)
         {
             $ocs = $cena_min;
-            $komunikat = "OCS policzone jako cena minimalna <1,3>";
+            $komunikat = "OCS policzone jako cena_min <1,3>";
         }
         elseif($cs_domyslna >= $cena_max)
         {
