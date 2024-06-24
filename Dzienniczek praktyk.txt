@@ -45,3 +45,7 @@ DZIEŃ		OPIS								ILOŚĆ GODZIN
 21.06.2024	Tworzenie nowego drzewka decyzyjnego po uwzględnieniu		8 h
 		wszystkich uwag i naszych poprawek. Ulepszenie skryptu 	
 		importującego dane z arkusza kalkulacyjnego. 	
+
+24.06.2024	Konsultacja z szefem na temat warunków algorytmu. Wprowadzenie	8 h
+		dodatkowych warunków i poprawa drobnych błędów.
+		Aktualizacja diagramu na podstawie poprawek.
