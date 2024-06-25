@@ -5,10 +5,11 @@ $projectDir = './';
 // Lista wybranych plików PHP z niestandardowymi nazwami
 $allowedFiles = [
     'dodaj.php' => 'Zaktualizuj dane statystyczne konkurencji',
+    'index.php' => 'Sprawdź dane statystyczne konkurencji',
     'dodaj_ppmi.php' => 'Dodaj PPMI',
     'dodaj_ppmo.php' => 'Dodaj PPMO',
-    'index.php' => 'Sprawdź dane statystyczne konkurencji',
     'algorytmWyznaczania.php' => 'Algorytm wyznaczania optymalnej ceny sprzedaży'
+
 ];
 
 // Obsługa przekierowania
@@ -23,6 +24,9 @@ if (isset($_GET['file']) && !empty($_GET['file'])) {
     }
     $error = "Błąd: Nie można otworzyć wybranego pliku.";
 }
+
+// Zliczenie liczby dostępnych plików
+$fileCount = count($allowedFiles);
 ?>
 <!DOCTYPE html>
 <html lang="pl">
@@ -94,6 +98,9 @@ if (isset($_GET['file']) && !empty($_GET['file'])) {
             background-color: var(--primary-color);
             color: var(--background-color);
         }
+        .single-button {
+            grid-column: span 2;
+        }
         .error {
             color: var(--error-color);
             text-align: center;
@@ -110,8 +117,14 @@ if (isset($_GET['file']) && !empty($_GET['file'])) {
     <main>
         <h2>Dostępne funkcje</h2>
         <div class="button-container">
-            <?php foreach ($allowedFiles as $file => $name): ?>
-                <a href="?file=<?= urlencode($file) ?>" target="_blank" class="button">
+            <?php
+            $counter = 0;
+            foreach ($allowedFiles as $file => $name):
+                $counter++;
+                // Przypisanie klasy 'single-button' ostatniemu przyciskowi jeśli liczba przycisków jest nieparzysta
+                $isLastSingle = ($counter === $fileCount && $fileCount % 2 !== 0) ? 'single-button' : '';
+            ?>
+                <a href="?file=<?= urlencode($file) ?>" target="_blank" class="button <?= $isLastSingle ?>">
                     <?= htmlspecialchars($name) ?>
                 </a>
             <?php endforeach; ?>
