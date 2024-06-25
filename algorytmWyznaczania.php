@@ -344,7 +344,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
             if (($czb *(1-$dop_marza_uj)) > $ppmi) 
             {
                 $ocs = $czb;
-                $komunikat = "OCS policzone jako CZB (ppmi)";
+                $komunikat = "OCS policzone jako CZB (ppmi)"; //nie wystąpi przez wcześniejszy warunek
             }
             else
             {
