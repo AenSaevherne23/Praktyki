@@ -317,7 +317,7 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     $ilosc_wys = $row['tk_ilosc_wystapien'];
     $czb = $cena_zakupu_netto * (1 + $vat);
     $ilosc_wys_min = $row['tk_ilosc_wys_min'];
-    $dop_marza_uj = 0.2; //dopuszczalna marza ujemna
+    $dop_marza_uj = 0.05; //dopuszczalna marza ujemna
     
     //sprawdzenie ppmi/ppmo i dodanie ich do zmiennych
     if (!empty($row['tk_ppmi'])) 
