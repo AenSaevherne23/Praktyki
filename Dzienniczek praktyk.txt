@@ -49,3 +49,13 @@ DZIEŃ		OPIS								ILOŚĆ GODZIN
 24.06.2024	Konsultacja z szefem na temat warunków algorytmu. Wprowadzenie	8 h
 		dodatkowych warunków i poprawa drobnych błędów.
 		Aktualizacja diagramu na podstawie poprawek.
+
+25.06.2024	Stworzenie panelu sterowania do umożliwienia nawigacji pomiędzy	8 h
+		utworzonymi funkcjonalnościami. Kalibracja wartości
+		dopuszczalnej marży ujemnej.
+
+26.06.2024	Stylizowanie stron skryptów dodając im spójnośc wizualną.	8 h
+		Konsultacje dalszych działań z szefem. Stworzenie nowej tabeli	
+		oraz importowanie do niej nowych danych. Korekcja skryptów	
+		dla nowej tabeli z danymi. Import aktualnej bazy danych,
+		dodanie brakujących tabel.

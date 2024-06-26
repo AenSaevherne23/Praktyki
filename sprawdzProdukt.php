@@ -30,8 +30,8 @@
                 echo "Podany nr EAN: " . $ean . "<br />";
 
                 // Zapytanie SQL filtrowane po kolumnie tk_plu
-                $zapytanie = "SELECT TOP (100) [tk_id], [tk_data], [tk_siec], [tk_plu], [tk_cena] 
-                              FROM [leclerc].[dbo].[tw_konkurencja] 
+                $zapytanie = "SELECT [tk_id], [tk_siec], [tk_plu], [tk_cena] 
+                              FROM [leclerc].[dbo].[tw_konkurencja_nowa] 
                               WHERE [tk_plu] = ?";
                 
                 // Przygotowanie i wykonanie zapytania
@@ -47,10 +47,9 @@
 
                 if (sqlsrv_has_rows($wynik)) {
                     echo "<table border='1'>";
-                    echo "<tr><th>ID</th><th>Data</th><th>Sieć</th><th>EAN</th><th>Cena</th></tr>";
+                    echo "<tr><th>ID</th><th>Sieć</th><th>EAN</th><th>Cena</th></tr>";
                     while ($wiersz = sqlsrv_fetch_array($wynik, SQLSRV_FETCH_ASSOC)) {
                         $tk_id = $wiersz["tk_id"];
-                        $tk_data = $wiersz["tk_data"] instanceof DateTime ? $wiersz["tk_data"]->format('Y-m-d') : $wiersz["tk_data"];
                         $tk_siec = $wiersz["tk_siec"];
                         $tk_plu = $wiersz["tk_plu"];
                         $tk_cena = number_format($wiersz["tk_cena"], 2, '.', '');
@@ -58,7 +57,7 @@
                         $zaokraglonaCena = zaokraglij_do_drugiego_miejsca($wiersz["tk_cena"]);
                         $wszystkieCeny[] = $zaokraglonaCena; // Dodanie zaokrąglonej ceny do pełnej listy cen
 
-                        echo "<tr><td>$tk_id</td><td>$tk_data</td><td>$tk_siec</td><td>$tk_plu</td><td>" . number_format($zaokraglonaCena, 2, '.', '') . "</td></tr>";
+                        echo "<tr><td>$tk_id</td><td>$tk_siec</td><td>$tk_plu</td><td>" . number_format($zaokraglonaCena, 2, '.', '') . "</td></tr>";
                     }
                     echo "</table>";
 
