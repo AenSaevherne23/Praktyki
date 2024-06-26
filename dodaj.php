@@ -30,7 +30,7 @@
 
         // Zapytanie SQL dla unikalnych numerów EAN z tabeli
         $zapytanie_eany = "SELECT DISTINCT [tk_plu] 
-                           FROM [leclerc].[dbo].[tw_konkurencja] 
+                           FROM [leclerc].[dbo].[tw_konkurencja_nowa] 
                            GROUP BY [tk_plu] 
                            HAVING COUNT(*) > 1";
         $wynik_eany = sqlsrv_query($conn, $zapytanie_eany);
@@ -54,8 +54,8 @@
             $eany_string = implode("', '", $eany);
 
             // Zapytanie SQL dla wszystkich wybranych numerów EAN
-            $zapytanie = "SELECT [tk_id], [tk_data], [tk_siec], [tk_plu], [tk_cena] 
-                          FROM [leclerc].[dbo].[tw_konkurencja] 
+            $zapytanie = "SELECT [tk_id], [tk_siec], [tk_plu], [tk_cena] 
+                          FROM [leclerc].[dbo].[tw_konkurencja_nowa] 
                           WHERE [tk_plu] IN ('$eany_string')";
             $wynik = sqlsrv_query($conn, $zapytanie);
 
@@ -191,7 +191,7 @@
                     // Sprawdzanie, czy wartości są różne
                     if ($existingRow['tk_srednia_cena'] != $sredniaCenaProduktow || $existingRow['tk_mediana'] != $medianaFiltr || $existingRow['tk_dominanta'] != $pierwszaDominanta || $existingRow['tk_cena_min'] != $cenaMin || $existingRow['tk_cena_max'] != $cenaMax || $existingRow['tk_ilosc_wys_min'] != $iloscWysMin) {
                         // Aktualizacja rekordu
-                        $updateQuery = "UPDATE dbo.tw_konkurencja_obliczenia 
+                        $updateQuery = "UPDATE dbo.tw_konkurencja_obliczenia
                                         SET tk_ilosc_wystapien = ?, tk_srednia_cena = ?, tk_mediana = ?, tk_dominanta = ?, tk_cena_max = ?, tk_cena_min = ?, tk_ilosc_wys_min = ?, tk_zaktualizowano = GETDATE() 
                                         WHERE tk_plu = ?";
                         $updateParams = array($liczbaProduktowFiltr, $sredniaCenaProduktow, $medianaFiltr, $pierwszaDominanta, $cenaMax, $cenaMin, $iloscWysMin, $ean);
