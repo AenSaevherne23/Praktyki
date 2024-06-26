@@ -3,10 +3,26 @@ require_once("config.php");
 require_once("Excel.php");
 
 function process_file($conn) {
-    echo "<form method=\"post\" enctype=\"multipart/form-data\" target=\"_self\" id='form_wczytaj_z_pliku'>";
-    echo "Wybierz plik:<input type=\"file\" id=\"file\" name=\"file\" style='margin-right: 2px' required>";
-    echo "<button type='submit'>Wyślij</button><br/>";
-    echo "</form>";
+    echo "<!DOCTYPE html>
+    <html lang='pl'>
+    <head>
+        <meta charset='UTF-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <title>Dodaj PPMO</title>
+        <link rel='stylesheet' href='styles.css'>
+    </head>
+    <body>
+    <main class='container'>
+        <header>
+            <h1>Wybierz plik CSV/Exel z danymi PPMO</h1>
+        </header>
+        <div class='form-container'>
+            <form method='post' enctype='multipart/form-data' target='_self' id='form_wczytaj_z_pliku'>
+                <label for='file'>Wybierz plik:</label>
+                <input type='file' id='file' name='file' style='margin-right: 2px' required>
+                <button type='submit'>Wyślij</button>
+            </form>
+        </div>";
 
     if (!empty($_FILES['file']['tmp_name'])) {
         $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));

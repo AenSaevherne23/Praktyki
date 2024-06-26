@@ -244,6 +244,9 @@ if ($stmt === false) {
 }
 
 echo "<style>
+        body {
+            background-color: #000000; /* Ustawienie czarnego tła dla całej strony */
+        }
         table {
             width: 100%;
             border-collapse: collapse;

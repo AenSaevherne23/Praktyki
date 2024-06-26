@@ -5,13 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Uruchom skrypt</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <h1>Uruchom skrypt PHP</h1>
-    <form action="" method="post">
-        <input type="submit" value="Uruchom skrypt">
-    </form>
+    <main>
+            <div class="container">
+                <h1>Uruchom skrypt PHP</h1>
+                <form action="" method="post">
+                    <button type="submit">Uruchom skrypt</button>
+                </form>
+            </div>
+    </main>
 
     <?php
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
