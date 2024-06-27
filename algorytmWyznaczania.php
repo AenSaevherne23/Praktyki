@@ -206,8 +206,8 @@ SELECT
     t.tw_cena_sprz,
     t.tw_c_zak,
     t.tw_pamp,
-    ppmi.tk_ppmi,
-    ppmo.tk_ppmo,
+    ppmi.tpi_cena,
+    ppmo.tpo_cena,
     ko.tk_srednia_cena AS srednia_cena_konkurencja,
     ko.tk_mediana,
     ko.tk_cena_max,
@@ -221,11 +221,11 @@ FROM
 LEFT JOIN 
     [leclerc].[dbo].[tw_plu] AS p ON p.plu_twid = t.tw_id
 LEFT JOIN 
-    [leclerc].[dbo].[tw_towar_ppmi] AS ppmi ON ppmi.tk_plu = p.plu_kod
+    [leclerc].[dbo].[tw_ppmi] AS ppmi ON ppmi.tpi_ean = p.plu_kod
 LEFT JOIN 
     [leclerc].[dbo].[tw_konkurencja_obliczenia] AS ko ON ko.tk_plu = p.plu_kod
 LEFT JOIN 
-    [leclerc].[dbo].[tw_towar_ppmo] AS ppmo ON ppmo.tk_plu = p.plu_kod
+    [leclerc].[dbo].[tw_ppmo] AS ppmo ON ppmo.tpo_ean = p.plu_kod
 CROSS APPLY
     (
         SELECT TOP 1 sg.gt_marza 
@@ -233,7 +233,7 @@ CROSS APPLY
         WHERE LEFT(t.tw_GT, 3) = LEFT(sg.gt_nr, 3)
     ) AS sg
 WHERE 
-    ppmi.tk_ppmi IS NOT NULL OR ppmo.tk_ppmo IS NOT NULL
+    ppmi.tpi_cena IS NOT NULL OR ppmo.tpo_cena IS NOT NULL
 ORDER BY t.tw_cena_sprz DESC;
 ";
 
@@ -389,8 +389,8 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     echo "<td>" . number_format((float)$row['tw_cena_sprz'], 2, '.', '') . "</td>";
     echo "<td>" . number_format((float)$row['tw_c_zak'], 2, '.', '') . "</td>";
     echo "<td>" . number_format((float)$row['tw_pamp'], 2, '.', '') . "</td>";
-    echo "<td>" . ($row['tk_ppmi'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_ppmi'], 2, '.', '')) . "</td>";
-    echo "<td>" . ($row['tk_ppmo'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_ppmo'], 2, '.', '')) . "</td>";
+    echo "<td>" . ($row['tpi_cena'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tpi_cena'], 2, '.', '')) . "</td>";
+    echo "<td>" . ($row['tpo_cena'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tpo_cena'], 2, '.', '')) . "</td>";
     echo "<td>" . ($row['srednia_cena_konkurencja'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['srednia_cena_konkurencja'], 2, '.', '')) . "</td>";
     echo "<td>" . ($row['tk_mediana'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_mediana'], 2, '.', '')) . "</td>";
     echo "<td>" . ($row['tk_cena_max'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_cena_max'], 2, '.', '')) . "</td>";
