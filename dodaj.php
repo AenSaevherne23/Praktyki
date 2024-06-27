@@ -30,7 +30,7 @@
 
         // Zapytanie SQL dla unikalnych numerów EAN z tabeli
         $zapytanie_eany = "SELECT DISTINCT [tk_plu] 
-                           FROM [leclerc].[dbo].[tw_konkurencja_nowa] 
+                           FROM [leclerc].[dbo].[tw_konkurencja] 
                            GROUP BY [tk_plu] 
                            HAVING COUNT(*) > 1";
         $wynik_eany = sqlsrv_query($conn, $zapytanie_eany);
@@ -55,7 +55,7 @@
 
             // Zapytanie SQL dla wszystkich wybranych numerów EAN
             $zapytanie = "SELECT [tk_id], [tk_siec], [tk_plu], [tk_cena] 
-                          FROM [leclerc].[dbo].[tw_konkurencja_nowa] 
+                          FROM [leclerc].[dbo].[tw_konkurencja] 
                           WHERE [tk_plu] IN ('$eany_string')";
             $wynik = sqlsrv_query($conn, $zapytanie);
 
