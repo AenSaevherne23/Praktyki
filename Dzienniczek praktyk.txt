@@ -59,3 +59,8 @@ DZIEŃ		OPIS								ILOŚĆ GODZIN
 		oraz importowanie do niej nowych danych. Korekcja skryptów	
 		dla nowej tabeli z danymi. Import aktualnej bazy danych,
 		dodanie brakujących tabel.
+
+27.06.2024	Pisanie skryptu który umożliwia obliczenie średniej ceny	8 h
+		sprzedarzy brutto na przestrzeni roku. Zaktualizowanie
+		skryptu do importu danych konkurencji. Aktualizacja danych
+		konkurencji.
