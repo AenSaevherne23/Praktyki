@@ -20,6 +20,13 @@
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         require_once("config.php");
 
+        // Usunięcie istniejących danych z tabeli
+        $deleteSql = "DELETE FROM dbo.tw_srednia_sprzedaz";
+        $deleteStmt = sqlsrv_query($conn, $deleteSql);
+        if ($deleteStmt === false) {
+            die(print_r(sqlsrv_errors(), true));
+        }
+
         // Zapytanie SQL do pobrania danych
         $sql = "
         SELECT 
@@ -47,7 +54,9 @@
             $tw_plu = $row['plu_kod'];
             $suma_ilosci = $row['suma_ilosci'];
             $suma_brutto = $row['suma_brutto'];
-            $srednia_brutto = $suma_brutto / $suma_ilosci;
+            
+            // Zaokrąglenie średniej wartości brutto do dwóch miejsc po przecinku
+            $srednia_brutto = round($suma_brutto / $suma_ilosci, 2);
 
             $insertData[] = array($tw_plu, $suma_ilosci, $srednia_brutto);
         }

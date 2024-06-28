@@ -8,8 +8,8 @@ $allowedFiles = [
     'sprawdzProdukt.php' => 'Sprawdź dane statystyczne konkurencji',
     'dodaj_ppmi.php' => 'Dodaj PPMI',
     'dodaj_ppmo.php' => 'Dodaj PPMO',
-    'algorytmWyznaczania.php' => 'Algorytm wyznaczania optymalnej ceny sprzedaży',
-    'dodajKonkurencja.php' => 'Dodaj ceny konkurencji'
+    'Algorytm/algorytmWyznaczania.php' => 'Algorytm wyznaczania optymalnej ceny sprzedaży',
+    'srednia_sprzedaz.php' => 'Oblicz średnią sprzedaż'
 
 ];
 
