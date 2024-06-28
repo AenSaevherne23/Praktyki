@@ -1,28 +1,8 @@
 <?php
-// Zdefiniowanie funkcji generującej tabelę HTML i zwracającej dane OCS i PLU jako tablicę
-function generujTabele($stmt) {
-    // Rozpoczęcie tabeli HTML
-    echo "<table>";
-    echo "<tr>
-            <th>PLU</th>
-            <th>VAT</th>
-            <th>Aktualna Cena Sprzedaży</th>
-            <th>Cena Zakupu NETTO</th>
-            <th>Pamp NETTO</th>
-            <th>Cena PPMI</th>
-            <th>Cena PPMO</th>
-            <th>Średnia Cena Konkurencja</th>
-            <th>Mediana</th>
-            <th>Cena Max</th>
-            <th>Cena Min</th>
-            <th>Ilość wystąpień minimalnej</th>
-            <th>Dominanta</th>
-            <th>Ilość Wystąpień</th>
-            <th>GT Marża</th>
-            <th>Domyślna cena sprzedaży</th>
-            <th>OCS</th>
-            <th>Komunikat</th>
-          </tr>";
+// Zdefiniowanie funkcji generującej tablicę OCS i PLU
+function generujOcs($stmt) {
+    // Inicjalizacja tablicy na dane OCS i PLU
+    $ocs_array = array();
 
     while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
         $vat = (float)$row['tw_VAT'] / 100;
@@ -98,34 +78,14 @@ function generujTabele($stmt) {
             $ocs = $integerPart + 0.09;
         }
 
-        // Wypisanie wiersza tabeli
-        echo "<tr>";
-        echo "<td>" . htmlspecialchars($row['plu_kod']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['tw_VAT']) . "</td>";
-        echo "<td>" . number_format((float)$row['tw_cena_sprz'], 2, '.', '') . "</td>";
-        echo "<td>" . number_format((float)$row['tw_c_zak'], 2, '.', '') . "</td>";
-        echo "<td>" . number_format((float)$row['tw_pamp'], 2, '.', '') . "</td>";
-        echo "<td>" . ($row['tpi_cena'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tpi_cena'], 2, '.', '')) . "</td>";
-        echo "<td>" . ($row['tpo_cena'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tpo_cena'], 2, '.', '')) . "</td>";
-        echo "<td>" . ($row['srednia_cena_konkurencja'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['srednia_cena_konkurencja'], 2, '.', '')) . "</td>";
-        echo "<td>" . ($row['tk_mediana'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_mediana'], 2, '.', '')) . "</td>";
-        echo "<td>" . ($row['tk_cena_max'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_cena_max'], 2, '.', '')) . "</td>";
-        echo "<td>" . ($row['tk_cena_min'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_cena_min'], 2, '.', '')) . "</td>";
-        echo "<td>" . htmlspecialchars($row['tk_ilosc_wys_min'] == 0 ? 'BRAK DANYCH' : $row['tk_ilosc_wys_min']) . "</td>";
-        echo "<td>" . ($row['tk_dominanta'] == 0 ? 'BRAK DANYCH' : number_format((float)$row['tk_dominanta'], 2, '.', '')) . "</td>";
-        echo "<td>" . htmlspecialchars($row['tk_ilosc_wystapien'] == 0 ? 'BRAK DANYCH' : $row['tk_ilosc_wystapien']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['gt_marza']) . "</td>";
-        echo "<td>" . number_format($cs_domyslna, 2, '.', '') . "</td>";
-        echo "<td>" . number_format($ocs, 2, '.', '') . "</td>";
-        echo "<td>" . htmlspecialchars($komunikat) . "</td>";
-        echo "</tr>";
-
- 
+        // Dodanie danych do tablicy OCS i PLU
+        $ocs_array[$row['plu_kod']] = $ocs;
     }
-    
-    echo "</table>";
 
     // Zwolnienie wyniku
     sqlsrv_free_stmt($stmt);
+
+    // Zwrócenie tablicy z OCS i PLU
+    return $ocs_array;
 }
 ?>
