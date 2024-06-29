@@ -1,5 +1,5 @@
 DZIEŃ		OPIS								ILOŚĆ GODZIN
-03.06.2024	Zapozananie się z zasadami BHP, przeciwpożarowymi		8 h
+03.06.2024	Zapoznanie się z zasadami BHP, przeciwpożarowymi		8 h
 		oraz sanitarnymi. Omówienie programu nauczania.
 
 04.06.2024	Zapoznanie się ze stanowiskiem pracy. Rozpoczęcie prac nad	8 h
@@ -55,12 +55,16 @@ DZIEŃ		OPIS								ILOŚĆ GODZIN
 		dopuszczalnej marży ujemnej.
 
 26.06.2024	Stylizowanie stron skryptów dodając im spójnośc wizualną.	8 h
-		Konsultacje dalszych działań z szefem. Stworzenie nowej tabeli	
-		oraz importowanie do niej nowych danych. Korekcja skryptów	
-		dla nowej tabeli z danymi. Import aktualnej bazy danych,
-		dodanie brakujących tabel.
+		Konsultacje dalszych działań z szefem. Import aktualnej 
+                bazy danych, dodanie brakujących tabel. Korekcja skryptów
+		w związku z zmianą nazw niektórych tabel.
 
 27.06.2024	Pisanie skryptu który umożliwia obliczenie średniej ceny	8 h
-		sprzedarzy brutto na przestrzeni roku. Zaktualizowanie
-		skryptu do importu danych konkurencji. Aktualizacja danych
-		konkurencji.
+		sprzedaży brutto na przestrzeni paru ostatnich miesięcy.
+		Zaktualizowanie skryptu do importu danych konkurencji. 
+		Aktualizacja danych konkurencji.
+
+28.06.2024	Refaktoryzacja kodu. Podzielenie jednego dużego pliku na	8 h
+		parę mniejszych. Dodanie funkcji, która pozwala na dodanie
+		proponowej ceny sprzedaży produktu z rzeczywistą średnią
+		ceną sprzedaży produktu w przeciągu kilku ostatnich miesięcy.
