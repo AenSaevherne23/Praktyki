@@ -66,5 +66,6 @@ DZIEŃ		OPIS								ILOŚĆ GODZIN
 
 28.06.2024	Refaktoryzacja kodu. Podzielenie jednego dużego pliku na	8 h
 		parę mniejszych. Dodanie funkcji, która pozwala na dodanie
-		proponowej ceny sprzedaży produktu z rzeczywistą średnią
-		ceną sprzedaży produktu w przeciągu kilku ostatnich miesięcy.
+		proponowej ceny sprzedaży produktu do tabeli, tej samej, 
+		która zawiera również rzeczywistą średnią cenę sprzedaży 
+		produktu w przeciągu kilku ostatnich miesięcy.
