@@ -59,13 +59,13 @@ DZIEŃ		OPIS								ILOŚĆ GODZIN
                 bazy danych, dodanie brakujących tabel. Korekcja skryptów
 		w związku z zmianą nazw niektórych tabel.
 
-27.06.2024	Pisanie skryptu który umożliwia obliczenie średniej ceny	8 h
+27.06.2024	Pisanie skryptu, który umożliwia obliczenie średniej ceny	8 h
 		sprzedaży brutto na przestrzeni paru ostatnich miesięcy.
-		Zaktualizowanie skryptu do importu danych konkurencji. 
+		Zaktualizowanie skryptu do importu danych cen u konkurencji.
 		Aktualizacja danych konkurencji.
 
 28.06.2024	Refaktoryzacja kodu. Podzielenie jednego dużego pliku na	8 h
 		parę mniejszych. Dodanie funkcji, która pozwala na dodanie
 		proponowej ceny sprzedaży produktu do tabeli, tej samej, 
 		która zawiera również rzeczywistą średnią cenę sprzedaży 
-		produktu w przeciągu kilku ostatnich miesięcy.
+		produktu.
